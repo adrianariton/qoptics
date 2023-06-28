@@ -26,7 +26,7 @@ A typical electro-optic transducer uses a $χ^{(2)}$ nonlinear interaction betwe
 - an *optical mode* $\hat{a}$
 - a *microwave mode* $\hat{b}$
 
-## Blue-detuned pump mode
+## Hamiltonian for a blue-detuned pump
 
 The first approach is blue-detuning $\hat{p}$ w.r.t $\hat{a}$ and coupling the optical mode to a waveguide ending with a photo detector.
 
@@ -79,11 +79,15 @@ $$r_0 = \frac{4g_0^2⟨n_p⟩\gamma_e}{(\gamma_e + \gamma_i)^2}$$
 
 """
 
+# ╔═╡ 7920ef3e-d71e-45a5-8043-790dfb2022e7
+md"""## Analytical solution for time evolution and numerical comparison"""
+
+# ╔═╡ f833a02d-aba5-4046-9a66-2e7af298a793
+md"""We can plot the solution $|\psi\rangle$ using the aforementioned formulas, or we can solve it numerically using julia's DifferentialEquations library. The following code can be modified to solve for any kind of Hamiltonian.
+"""
+
 # ╔═╡ cff02deb-0973-4a5c-b905-a38a48ec1e61
 md"""`The single-photon nonlinear interaction rate log₁₀(g₀ (kHz)) : `$(@bind log₁₀g₀ Slider(0:0.25:6; default=0, show_value=true))"""
-
-# ╔═╡ 30c4926d-4b31-4704-9621-c4200faf1f40
-g₀ = 10 ^ log₁₀g₀
 
 # ╔═╡ ff17c447-bb69-4455-8819-6fa625addc7a
 md"""
@@ -94,7 +98,19 @@ md"""
 md"""` Extrinsic loss rate γₑ (MHz) : `$(@bind γₑ Slider(0:1:200; default=100, show_value=true))"""
 
 # ╔═╡ ae46e64f-d968-472c-b92b-204faf27ae7c
-md"""` Time interval: [0 tᶠᶦⁿ] ( .1 µs) : `$(@bind tᶠᶦⁿ Slider(5:0.1:200; default=10, show_value=true))"""
+md"""` Time interval: [0 tᶠᶦⁿ] ( .1 µs) | log(tᶠᶦⁿ): `$(@bind logtᶠᶦⁿ Slider(0:0.1:9; default=1, show_value=true))"""
+
+# ╔═╡ 1164cc37-2062-4ff9-8463-9edfb21db77a
+begin
+tᶠᶦⁿ = 10 ^ logtᶠᶦⁿ # time interval in .1 microseconds
+md"""`The time interval above will be used for all the graphs below`"""
+end
+
+# ╔═╡ 30c4926d-4b31-4704-9621-c4200faf1f40
+begin
+g₀ = 10 ^ log₁₀g₀
+	md""""""
+end
 
 # ╔═╡ bf31c280-5e88-42d0-85bb-3ab11378aca1
 begin
@@ -115,7 +131,8 @@ begin
 	MHz = 1e6
 	kHz = 1e3
 	MkHz = 1e3
-	factor = 1e7 # time is ploted in units of .1 microseconds
+	factor = 1e7 	# time is ploted in units of .1 microseconds
+
 	H = [0 g*kHz/factor
 		 conj(g * kHz)/factor  -im * γₑ * MHz/(2.0)/factor] # H in Hz
 	
@@ -130,10 +147,14 @@ begin
 
 	# c_0 and c_1 are extracted from sol
 	sol = solve(schrodinger; dt=1e-8)
+
+	md""""""
 end
 
 # ╔═╡ 91ce7b5d-cbcc-4cf5-8999-c2edd5e2bccf
 begin
+	deltat = tᶠᶦⁿ/1000
+	t = 0:deltat:tᶠᶦⁿ
 	
 	using Plots
 	
@@ -160,30 +181,21 @@ begin
 
 	# plot(sol.t,  c0ᵣₑₐₗ, linewidth=3, ls=:dash, label = "\$real(c_0)\$")
 	# plot(sol.t,  c0ᵣₑₐₗ, linewidth=3, ls=:dash, label = "\$real(c_0)\$")
+	
+	
 end
 
 # ╔═╡ f2fbc3f0-8a51-43e6-8e15-15e2fa61124f
 Markdown.parse("""
-|g             | nₚ    | gᵖʳᶦᵐᵉ            |
-|:-------------|:------|:------------------|
-|`$g` kHz      | `$nₚ`MHz   | `$gᵖʳᶦᵐᵉ` MHz     |
+|g             | nₚ    | gᵖʳᶦᵐᵉ            |tᶠᶦⁿ      |
+|:-------------|:------|:------------------|:---------|
+|`$g` kHz      | `$nₚ` | `$gᵖʳᶦᵐᵉ` MHz     | `$tᶠᶦⁿ` * .1 µs |
 """)
 
 
-# ╔═╡ 7920ef3e-d71e-45a5-8043-790dfb2022e7
-md"""### Solving with DifferentialEquations.jl"""
-
-# ╔═╡ 20918422-f10d-4a88-90b4-622603f8da99
-Samples = nt2
-
-# ╔═╡ 0f844913-0a57-4e70-8bd1-ab2e9265178d
-md"""## Time evolution of $\psi = c_0|00\rangle + c_1|11\rangle$"""
-
-# ╔═╡ 2dd79e69-a733-4aff-8843-9bc68ce66526
-t = 0:0.1:tᶠᶦⁿ
-
-# ╔═╡ f87b678d-f7e6-4822-8d55-8845e5ab974d
-
+# ╔═╡ 7d6da8c9-bcb3-4d19-86bc-f62bee1bfeeb
+md"""Below we plot numerical and analytical solutions for the components of both $|00\rangle$ and $|11\rangle$ of state $|\psi\rangle$ with respect to time. One can check out and modify the code by clicking the eye icon on the left of the graph.
+"""
 
 # ╔═╡ d09b3c71-8049-4bf6-b00f-0c93e438ec51
 begin
@@ -234,7 +246,7 @@ which is consistent to the previous deduction of $r_0$ as it corresponds to a Po
 
 # ╔═╡ a642d935-e0e4-4f89-ad12-083ab719f7dd
 begin
-	plot(t,  (c0vec .* c0vec + c1vec .* c1vec), label = "\$\\langle\\psi(t)|\\psi(t)\\rangle\$ (analytical solution)", linewidth=1, c=2)
+	plot()
 	
 	plot!(t, exp.(-4*abs(g * kHz)^2 / (γₑ * MHz) * t / factor), linewidth=1, label = "Poissonian Aproximation", c=1)
 	
@@ -247,6 +259,9 @@ begin
 	end
 	
 	plot!(sol.t,  c0ᵣₑₐₗ .* c0ᵣₑₐₗ +  c1ᵢₘ .* c1ᵢₘ, linewidth=1, ls=:dash, label = "\$\\langle\\psi(t)|\\psi(t)\\rangle\$ (numerical)", c=2, xaxis="time (.1µs)")
+
+	plot!(t,  (c0vec .* c0vec + c1vec .* c1vec), label = "\$\\langle\\psi(t)|\\psi(t)\\rangle\$ (analytical solution)", linewidth=1, c=2)
+	
 end
 
 # ╔═╡ 71d37f34-2163-4208-a106-54adff1b791c
@@ -359,8 +374,8 @@ begin
 			plot!(lognₚspan, log10.(revec0), label="\$\\log(r_e)\$ (γᵢ = 0)", c=2, ls=:dash)
 		end
 		
-		plot!(lognₚspan, log10.(revec), xaxis="log10(#Particles)", label="\$\\log(r_e)\$ [1 event]", c=1)
-		plot!(lognₚspan, log10.(revecmany .+ revec), xaxis="log10(#Particles)", label="\$\\log(r_e)\$ [1 or 2 events]", c=1, ls=:dash)
+		plot!(lognₚspan, log10.(revec), xaxis="\$\\log(\$nb of photons in the pump mode\$)\$", label="\$\\log(r_e)\$ [1 event]", c=1)
+		plot!(lognₚspan, log10.(revecmany .+ revec), label="\$\\log(r_e)\$ [1 or 2 events]", c=1, ls=:dash)
 		
 		# plot!(lognₚspan, log10.(r0vec), label="\$\\log(r_0)\$", c=3, ls=:dash)
 
@@ -370,7 +385,7 @@ begin
 			plot!(logpspan, log10.(revecp0), label="\$\\log(r_e)\$ (γᵢ = 0)", c=2, ls=:dash)
 			
 		end
-		plot!(logpspan, log10.(revecp), xaxis="log10(Power / \$\\hbar\\omega\$)", label="\$\\log(r_e)\$ [1 event]", c=1)
+		plot!(logpspan, log10.(revecp), xaxis="\$\\log(\$Power / \$\\hbar\\omega)\$", label="\$\\log(r_e)\$ [1 event]", c=1)
 		
 		# plot!(logpspan, log10.(scalingfactor * (g₀ * kHz) ^ 2 * 10 .^ logpspan), xaxis="log10(Power * \$\\hbar\\omega\$)", label="Scaling of \$r_0\$", c=3)
 		
@@ -384,15 +399,15 @@ begin
 
 		end
 		# plot!(lognₚspan, r0vec ./ 1000, label="\$r_0\$ (kHz)", c=3, ls=:dash)
-		plot!(lognₚspan, revec, xaxis="log10(#Particles)", label="\$r_e\$ [1 event]", c=1)
-		plot!(lognₚspan, revecmany .+ revec, xaxis="log10(#Particles)", label="\$r_e\$ [1 or 2 events]", c=1, ls=:dash)
+		plot!(lognₚspan, revec, label="\$r_e\$ [1 event]", c=1)
+		plot!(lognₚspan, revecmany .+ revec, xaxis="\$\\log(\$nb of photons in the pump mode\$)\$", label="\$r_e\$ [1 or 2 events]", c=1, ls=:dash)
 		
 		plotpower = plot()
 		if guide
 			plot!(logpspan, revecpmax, label="\$r_e\$ (γₑ = γᵢ)", c=2)
 			plot!(logpspan, revecp0, label="\$r_e\$ (γᵢ = 0)", c=2, ls=:dash)
 		end
-		plot!(logpspan, revecp, xaxis="log10(Power / \$\\hbar\\omega\$)", label="\$r_e\$", c=1)
+		plot!(logpspan, revecp, xaxis="\$\\log(\$Power / \$\\hbar\\omega)\$", label="\$r_e\$", c=1)
 
 		# plot!(logpspan, scalingfactor * (g₀ * kHz) ^ 2 * 10 .^ logpspan ./ 1000, xaxis="log10(Power * \$\\hbar\\omega\$)", label="Scaling of \$r_0\$", c=3)
 		
@@ -426,19 +441,21 @@ Both scale as $g/\gamma$
 """
 
 # ╔═╡ d9a0a623-03f9-458d-ab99-fe8a0446ed3c
-md"""## 2nd Infidelity vs time"""
+md"""## Infidelity due to two-photon-excitations"""
 
 # ╔═╡ d11bc08a-641d-426e-8999-805e93afc6ba
 begin
-	plot(t, real(abs.(c1vec).^2 ./ (abs.(c0vec) .^2 .+ abs.(c1vec) .^ 2)), xaxis="Time (.1µs )", yaxis="Probability of double production", label=:none)
+	plot(t, real(abs.(c1vec).^2 ./ (abs.(c0vec) .^2 .+ abs.(c1vec) .^ 2)), xaxis="Time (.1µs )", yaxis="Two-photon-excitations infidelity", label=:none)
 
+	plot(sol.t, real(abs.(c1ᵢₘ).^2 ./ (abs.(c0ᵣₑₐₗ) .^2 .+ abs.(c1ᵢₘ) .^ 2)), xaxis="Time (.1µs )", yaxis="Two-photon-excitations infidelity", label=:none)
+	
 	# TODO change to fit
 	#plot!(t, (t ./ t) * g * kHz / (γₑ * MHz), ls=:dash, c=2)
 	
 end
 
 # ╔═╡ 02543f9e-0fb1-4f6d-8290-1a14e6fd4ecd
-md"""## Avoiding the first reason of infidelity
+md"""## Avoiding the first source of noise
 
 While the second source of infidelity is unavoidable, the first can be eliminated in the two ways:
 
@@ -2149,20 +2166,19 @@ version = "1.4.1+0"
 # ╟─4eb251c5-2323-4185-8320-d33316cbf047
 # ╟─45929b93-3ce5-4db3-a22a-423a28c8f32d
 # ╟─01177799-1814-40da-ad12-05d5215642fd
+# ╟─7920ef3e-d71e-45a5-8043-790dfb2022e7
+# ╟─f833a02d-aba5-4046-9a66-2e7af298a793
 # ╟─cff02deb-0973-4a5c-b905-a38a48ec1e61
-# ╟─30c4926d-4b31-4704-9621-c4200faf1f40
 # ╟─ff17c447-bb69-4455-8819-6fa625addc7a
 # ╟─387227e3-e4d9-4453-8845-b3c730999763
 # ╟─ae46e64f-d968-472c-b92b-204faf27ae7c
+# ╟─1164cc37-2062-4ff9-8463-9edfb21db77a
+# ╟─30c4926d-4b31-4704-9621-c4200faf1f40
 # ╟─bf31c280-5e88-42d0-85bb-3ab11378aca1
 # ╟─f2fbc3f0-8a51-43e6-8e15-15e2fa61124f
-# ╟─7920ef3e-d71e-45a5-8043-790dfb2022e7
 # ╠═10209491-8d9f-4056-9358-09101e533dd5
-# ╟─20918422-f10d-4a88-90b4-622603f8da99
 # ╟─91ce7b5d-cbcc-4cf5-8999-c2edd5e2bccf
-# ╟─0f844913-0a57-4e70-8bd1-ab2e9265178d
-# ╟─2dd79e69-a733-4aff-8843-9bc68ce66526
-# ╟─f87b678d-f7e6-4822-8d55-8845e5ab974d
+# ╟─7d6da8c9-bcb3-4d19-86bc-f62bee1bfeeb
 # ╟─d09b3c71-8049-4bf6-b00f-0c93e438ec51
 # ╟─c746c416-e559-45a3-84be-f21ab256a5a3
 # ╟─2f830af9-8d21-4b25-add5-6842f0ca0ba5
