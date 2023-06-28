@@ -64,7 +64,7 @@ Notations:
 # ╔═╡ 45929b93-3ce5-4db3-a22a-423a28c8f32d
 md"""
 
-## Time evolution in the subspace spanned by $|00\rangle$ and $|11\rangle$
+## Time evolution of a state in the subspace spanned by $|00\rangle$ and $|11\rangle$
 
 The [1] Hamiltonian becomes:
 
@@ -89,7 +89,7 @@ using PlutoUI
   ╠═╡ =#
 
 # ╔═╡ 7920ef3e-d71e-45a5-8043-790dfb2022e7
-md"""## Analytical solution for time evolution and numerical comparison"""
+md"""### Analytical solution for time evolution and numerical comparison"""
 
 # ╔═╡ f833a02d-aba5-4046-9a66-2e7af298a793
 md"""We can plot the solution $|\psi\rangle$ using the aforementioned formulas, or we can solve it numerically using julia's DifferentialEquations library. The following code can be modified to solve for any kind of Hamiltonian.
@@ -115,14 +115,9 @@ tᶠᶦⁿ = 10 ^ logtᶠᶦⁿ # time interval in .1 microseconds
 md"""`The time interval above will be used for all the graphs below`"""
 end
 
-# ╔═╡ 30c4926d-4b31-4704-9621-c4200faf1f40
-begin
-g₀ = 10 ^ log₁₀g₀
-	md""""""
-end
-
 # ╔═╡ bf31c280-5e88-42d0-85bb-3ab11378aca1
 begin
+	g₀ = 10 ^ log₁₀g₀
 	nₚ = 10^log₁₀nₚ
 	g = g₀ * sqrt(nₚ)
 	if (γₑ)^2 / 16 - (g / 1000)^2 > 0
@@ -190,7 +185,8 @@ begin
 
 	# plot(sol.t,  c0ᵣₑₐₗ, linewidth=3, ls=:dash, label = "\$real(c_0)\$")
 	# plot(sol.t,  c0ᵣₑₐₗ, linewidth=3, ls=:dash, label = "\$real(c_0)\$")
-	
+	md"""Below we plot numerical and analytical solutions for the components of both $|00\rangle$ and $|11\rangle$ of state $|\psi\rangle$ with respect to time. Move the sliders above in order to modify the set of parameters.
+"""
 	
 end
 
@@ -201,10 +197,6 @@ Markdown.parse("""
 |`$g` kHz      | `$nₚ` | `$gᵖʳᶦᵐᵉ` MHz     | `$tᶠᶦⁿ` * .1 µs |
 """)
 
-
-# ╔═╡ 7d6da8c9-bcb3-4d19-86bc-f62bee1bfeeb
-md"""Below we plot numerical and analytical solutions for the components of both $|00\rangle$ and $|11\rangle$ of state $|\psi\rangle$ with respect to time. One can check out and modify the code by clicking the eye icon on the left of the graph.
-"""
 
 # ╔═╡ d09b3c71-8049-4bf6-b00f-0c93e438ec51
 begin
@@ -237,25 +229,42 @@ begin
 	
 end
 
+# ╔═╡ 76ba8fca-8425-4991-a04c-957c5748caa4
+html"""<sub><sup>
+One can check out and modify the code by clicking the eye icon on the left of the graph.</sup></sub>"""
+
 # ╔═╡ c746c416-e559-45a3-84be-f21ab256a5a3
 md"""
-## Rate of photon generation
+## Rate of photon generation and of generating Bell pairs
+"""
+
+# ╔═╡ 5989cbc6-9e3e-46bf-9e70-8ea992629a9d
+md"""
+To obtain a $|11\rangle$ pair on which we can herald the single microwave photon we simply pump the system on the blue-detuned optical mode and let the Hamiltonian evolve,
+while waiting for a click at the detector. A click heralds
+the creation of single photon in the microwave mode. This is called **single-click event**
+"""
+
+# ╔═╡ fdf8a09a-ff61-4f93-98eb-ceee6f99b1bc
+md"""### Rate of photon generation
 """
 
 # ╔═╡ 2f830af9-8d21-4b25-add5-6842f0ca0ba5
 md"""
-The probability that the photon remains undetected at time t is
+Restricting ourselves to the space spanned by $|00\rangle$ and $|11\rangle$, we can easily find **the probability that the photon remains undetected at time t** as the squared norm of $|\psi\rangle$:
 
 $$\langle\psi(t)|\psi(t)\rangle \sim e^{(2g' - \frac{\gamma_e}{2})t} \sim e^{-\frac{4|g|^2}{\gamma_e}t}$$
 
 
 which is consistent to the previous deduction of $r_0$ as it corresponds to a Poissonian detection process with rate
 	$r_0 = \frac{4g_0^2⟨n_p⟩\gamma_e}{(\gamma_e + \gamma_i)^2},$ accounting for the  $\frac{\gamma_e}{\gamma_e + \gamma_i}$ drop in efficiency.
+
+Below we plot the rate of photon generation $r_0$ with respect to time. The afforementioned Poissonian approximation is also ploted in order check that they are infact similar.
 """
 
 # ╔═╡ a642d935-e0e4-4f89-ad12-083ab719f7dd
 begin
-	plot()
+	plot(title="Probability that the photon remains undetected")
 	
 	plot!(t, exp.(-4*abs(g * kHz)^2 / (γₑ * MHz) * t / factor), linewidth=1, label = "Poissonian Aproximation", c=1)
 	
@@ -270,20 +279,46 @@ begin
 	plot!(sol.t,  c0ᵣₑₐₗ .* c0ᵣₑₐₗ +  c1ᵢₘ .* c1ᵢₘ, linewidth=1, ls=:dash, label = "\$\\langle\\psi(t)|\\psi(t)\\rangle\$ (numerical)", c=2, xaxis="time (.1µs)")
 
 	plot!(t,  (c0vec .* c0vec + c1vec .* c1vec), label = "\$\\langle\\psi(t)|\\psi(t)\\rangle\$ (analytical solution)", linewidth=1, c=2)
+
 	
 end
 
+# ╔═╡ b3004e4f-0963-483d-b70e-b5ead79791b8
+html"""
+	<sub><sup>Click the eye icon to the left to see or modify the code the plots the following graph</sup></sub>
+	"""
+
+# ╔═╡ dcc5bb82-0418-4589-a036-073e23afbb1c
+md"""
+As we can notice from the figure, the probability that the photon remains undetected at a given time can be modeled with a Poissonian detection event with rate $r_0$. 
+
+In the following section we explore the way coupled coherent pumps help us generate entangled bell pairs as well as the balance between their rate of generation and their fidelity.
+"""
+
+# ╔═╡ 6a3e0878-f0a8-49a5-a23d-3edf98c0fc56
+md""""""
+
 # ╔═╡ 71d37f34-2163-4208-a106-54adff1b791c
-md"""## Heralding the generation of distributed microwave Bell pairs
-If we use the same coherent pump to drive two separate copies of this system and erase the which-path information using a beam splitter, we will herald the generation of the distributed microwave Bell pair 
+md"""### Heralding the generation of distributed microwave Bell pairs
 
-$$|01\rangle \pm |10\rangle$$
+If we use the same coherent pump to drive two separate copies of this system and erase the which-path information using a beam splitter, we will herald the generation of the distributed microwave Bell pair $|01\rangle \pm |10\rangle$
+in the following steps
+- The blue-detuned pump will create pairs of microwave/optical photons.
+- By detection of the optical photons after erasing the path inforation we can herald entanglement between the microwave oscillators.
+- This is a high-fidelity, low-efficiency probabilistic operation.
 
-If the nodes have different interaction rates $g$ and couplings $\gamma_e$, the Bell pair would not be pure, hence the **infidelity**:
+However, if the nodes have different interaction rates $g$ and couplings $\gamma_e$, the Bell pair would not be pure, hence the **infidelity**:
 
 $$c_{1 r}|01\rangle \pm c_{1 l}|10\rangle. \text{ [2]}$$
 
-## Bell pairs generation rate
+
+"""
+
+# ╔═╡ cfe37f4c-1c34-47a1-9984-e38a3433a5de
+md""""""
+
+# ╔═╡ ef75728f-0b9f-41ce-9b36-1689952858be
+md"""### Bell pairs generation rate
 
 Solving for the Poissonian distribution, using
 
@@ -300,19 +335,28 @@ where
 -  $\Delta t$ is the duration of each pump pulse
 -  $t_r$ is the time necessary for the reset of the microwave cavity (usually on the order of microseconds)
 
-**The probability of more than one event during the interval $∆t$ are generally negligible, but lead to infidelities in this protocol at high entanglement rates.**
-"""
+**The probability of more than one event during the interval $∆t$ are generally negligible, but lead to infidelities in this protocol at high entanglement rates.**"""
+
+# ╔═╡ e008a26b-f4b2-4106-b982-69bc34af0c4e
+md""""""
 
 # ╔═╡ fe0a2c93-b0d1-4e47-b760-feeea03a7ace
 md"""
-## Bell pairs generation rate vs $n_p$ and pump power
+### Visualizing the entanglement rate in time
+
+In order to express the entanglement rate $r_e$ (Bell pairs generation rate) with respect to $P$, the power of the pump mode $\hat{p}$, we need to rewrite a few of the afforementioned formulas:
 
 $$r_e = 2r_0e^{-r_0\Delta t}\frac{\Delta t}{\Delta t + t_r}\text{, where } $$ $$ r_0 = \frac{4g_0^2⟨n_p⟩\gamma_e}{(\gamma_e + \gamma_i)^2}= 16g_0^2\frac{P}{\hbar\omega}\frac{\gamma_e^2}{(\gamma_e + \gamma_i)^4} [*] \text{, because}$$
  
 $$⟨n_p⟩ = \frac{4\gamma_e}{(\gamma_e + \gamma_i)^2} \frac{P}{\hbar \omega}$$
 
-TODO: Add explanation of when the maximum and minmum are
+As one notices from the final formula $[*]$, the entanglement rate scales as $\frac{\gamma_e^2}{(\gamma_e + \gamma_i)^4}$ with respect to the $\hat{p}$ pump power, so it is maximum when $\gamma_e = \gamma_i$.
+
+Below we plot the entanglement rate $r_e$ with respect to the power of and the number of photons in the pump mode $\hat{p}$. One can vizualize the entanglement rate when $\gamma_e = \gamma_i$ (maximum entanglement rate), as well as when there is no intrinsic loss rate ($\gamma_i = 0$) by toggling the `Guides` option.
 """
+
+# ╔═╡ c82a5807-ccba-41a7-b3c2-cd4e5bac0ecb
+md""""""
 
 # ╔═╡ c5a2437e-c77f-4a04-84ce-cb73a682fac5
 md"""` Time interval: ∆t (.1µs)  : `$(@bind dtµs Slider(1:0.01:10; default=1, show_value=true))"""
@@ -328,7 +372,7 @@ md"""`Guide : `$(@bind guide CheckBox(default=false))"""
 
 # ╔═╡ ecedd49b-e036-4c9a-94c4-a8e119309dc2
 begin
-	function entanglement_rate(log_range, γₑ, γᵢ, g₀, dt, tr; power=false, moreevents=false)
+	function entanglement_rate(log_range, γₑ, γᵢ, g₀, dt, tr; power=false, moreevents=false, logy=false)
 		if power ==false
 			r0vec = 4 * (g₀ * kHz)^2 * (10 .^ log_range) * (γₑ * MHz) / (γₑ * MHz + γᵢ * MHz)^2
 		else
@@ -338,12 +382,16 @@ begin
 		end
 	
 		if moreevents == false
-	
 			revec = 2 * r0vec .* exp.(- r0vec * dt) * dt / (dt + tr)
 		else
 			revec = 2 * r0vec .^ 2 .* exp.(- r0vec * dt) * dt ^ 2 / 2 / (dt + tr) 
 		end
-		return revec
+
+		if logy
+			return log10.(revec)
+		else
+			return revec
+		end
 	end
 
 	logpowerspan(log_range, γₑ, γᵢ) = -log10( 4 * (γₑ * MHz) / (γₑ * MHz + γᵢ * MHz)^2) .+ log_range
@@ -361,58 +409,65 @@ begin
 	elseif g₀ < 1e8
 		lognₚspan = -10.0:0.1:9.5
 	end
+
+	nₚspan = 10 .^ lognₚspan
 	
-	logpspan = logpowerspan(lognₚspan, γₑ, γₑ)
+	logpspan = logpowerspan(lognₚspan, γₑ, γᵢ)
+
+	pspan = 10 .^ logpspan
 	
 	scalingfactor 	= 16 * ((γₑ * MHz) / (γₑ * MHz + γₑ * MHz)^2)^2
 	dt 			  	= dtµs * 1e-7
 	tr 				= 1e-6
 	
-	revec     = entanglement_rate(lognₚspan, γₑ, γᵢ, g₀, dt, tr;)
-	revecmax  = entanglement_rate(lognₚspan, γₑ, γₑ, g₀, dt, tr;)
-	revec0    =	entanglement_rate(lognₚspan, γₑ, 0 , g₀, dt, tr;)
+	revec     = entanglement_rate(lognₚspan, γₑ, γᵢ, g₀, dt, tr; logy=logʳᵃᵗᵉ)
+	revecmax  = entanglement_rate(lognₚspan, γₑ, γₑ, g₀, dt, tr; logy=logʳᵃᵗᵉ)
+	revec0    =	entanglement_rate(lognₚspan, γₑ, 0 , g₀, dt, tr; logy=logʳᵃᵗᵉ)
 	
-	revecp    =	entanglement_rate(lognₚspan, γₑ, γᵢ, g₀, dt, tr; power=true)
-	revecpmax = entanglement_rate(lognₚspan, γₑ, γₑ, g₀, dt, tr; power=true)
-	revecp0   =	entanglement_rate(lognₚspan, γₑ, 0 , g₀, dt, tr; power=true)
+	revecp    =	entanglement_rate(lognₚspan, γₑ, γᵢ, g₀, dt, tr; power=true, logy=logʳᵃᵗᵉ)
+	revecpmax = entanglement_rate(lognₚspan, γₑ, γₑ, g₀, dt, tr; power=true, logy=logʳᵃᵗᵉ)
+	revecp0   =	entanglement_rate(lognₚspan, γₑ, 0 , g₀, dt, tr; power=true, logy=logʳᵃᵗᵉ)
 
-	revecmany = entanglement_rate(lognₚspan, γₑ, 0 , g₀, dt, tr; moreevents=true)
+	revecmany = entanglement_rate(lognₚspan, γₑ, 0 , g₀, dt, tr; moreevents=true, logy=logʳᵃᵗᵉ)
 
 	
-	plotnp = plot()
+	plotnp = plot(title="Entanglement Rate (Hz)")
 	if guide
-		plot!(lognₚspan, revecmax, label="\$r_e\$ (γₑ = γᵢ)", c=2)
-		plot!(lognₚspan, revec0, label="\$r_e\$ (γᵢ = 0)", c=2, ls=:dash)
+		plot!(nₚspan, revecmax, label="\$r_e\$ (γₑ = γᵢ)", c=2)
+		plot!(nₚspan, revec0, label="\$r_e\$ (γᵢ = 0)", c=2, ls=:dash)
 
 	end
-	plot!(lognₚspan, revec, label="\$r_e\$ [1 event]", c=1)
-	plot!(lognₚspan, revecmany .+ revec, xaxis="\$\\log(\$nb of photons in the pump mode\$)\$", label="\$r_e\$ [1 or 2 events]", c=1, ls=:dash)
+	plot!(nₚspan, revec, label="\$r_e\$ [1 event]", c=1)
+	plot!(nₚspan, revecmany .+ revec, xaxis="nb of photons in the pump mode", label="\$r_e\$ [1 or 2 events]", c=1, ls=:dash)
 	
-	plotpower = plot()
+	plotpower = plot(legend=:none)
 	if guide
-		plot!(logpspan, revecpmax, label="\$r_e\$ (γₑ = γᵢ)", c=2)
-		plot!(logpspan, revecp0, label="\$r_e\$ (γᵢ = 0)", c=2, ls=:dash)
+		plot!(pspan, revecpmax, label="\$r_e\$ (γₑ = γᵢ)", c=2)
+		plot!(pspan, revecp0, label="\$r_e\$ (γᵢ = 0)", c=2, ls=:dash)
 	end
-	plot!(logpspan, revecp, xaxis="\$\\log(\$Power / \$\\hbar\\omega)\$", label="\$r_e\$", c=1)
+	plot!(pspan, revecp, xaxis="Power / \$\\hbar\\omega\$", label="\$r_e\$", c=1)
 
 	
 	if (logʳᵃᵗᵉ == true)
-		plot(plotnp, plotpower, layout = grid(2, 1, heights=[0.5, 0.5]), yscale=:log10)
+		plot(plotnp, plotpower, layout = grid(2, 1, heights=[0.5, 0.5]), xscale=:log10) # TODO: find way to use yscale=:log10 without it crashing. cutoff unimportant examples (y < 1 => cut)
 	else
-		plot(plotnp, plotpower, layout = grid(2, 1, heights=[0.5, 0.5]))
+		plot(plotnp, plotpower, layout = grid(2, 1, heights=[0.5, 0.5]), xscale=:log10)
 	end
 end
 
+# ╔═╡ 7c96056a-1d20-4f69-b7c9-9c49d250fce4
+html"""
+	<sub><sup>Click the eye icon to the left to see or modify the code the plots the following graph</sup></sub>
+	"""
+
 # ╔═╡ e9855f2c-8fc8-40c4-997a-a60a6da3d22b
 md"""
-As one notices form Formula $[*]$, the entanglement rate scales as 
-
-$$\frac{\gamma_e^2}{(\gamma_e + \gamma_i)^4}$$
+TODO: plot other lines from paper and explain them
 """
 
 # ╔═╡ fa673ba6-677d-41b8-a60d-8519db356c61
 md"""
-## Outside of our assumptions
+## Reviewing assumptions made and regimes in which they break
 Under our initial assumptions:
 - an internal loss rate $\gamma_i$ reduces the entanglement generation rate by a factor of $\frac{\gamma_e}{\gamma_e + \gamma_i}$
 - an internal loss rate $\gamma_i$ does **NOT** affect the fidelity of the obtained bell pairs (see [2])
@@ -427,7 +482,7 @@ Both scale as $g/\gamma$
 """
 
 # ╔═╡ d9a0a623-03f9-458d-ab99-fe8a0446ed3c
-md"""## Infidelity due to two-photon-excitations"""
+md"""### Infidelity due to two-photon-excitations"""
 
 # ╔═╡ d11bc08a-641d-426e-8999-805e93afc6ba
 begin
@@ -441,7 +496,7 @@ begin
 end
 
 # ╔═╡ 02543f9e-0fb1-4f6d-8290-1a14e6fd4ecd
-md"""## Avoiding the first source of noise
+md"""## Workarounds
 
 While the second source of infidelity is unavoidable, the first can be eliminated in the two ways:
 
@@ -479,7 +534,7 @@ PlutoUI = "~0.7.51"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.9.1"
+julia_version = "1.8.5"
 manifest_format = "2.0"
 project_hash = "22c543de5bb990d774166bdeb997f627a0f7f785"
 
@@ -499,10 +554,6 @@ deps = ["LinearAlgebra", "Requires"]
 git-tree-sha1 = "76289dc51920fdc6e0013c872ba9551d54961c24"
 uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
 version = "3.6.2"
-weakdeps = ["StaticArrays"]
-
-    [deps.Adapt.extensions]
-    AdaptStaticArraysExt = "StaticArrays"
 
 [[deps.ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
@@ -519,22 +570,6 @@ deps = ["Adapt", "LinearAlgebra", "Requires", "SparseArrays", "SuiteSparse"]
 git-tree-sha1 = "f83ec24f76d4c8f525099b2ac475fc098138ec31"
 uuid = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
 version = "7.4.11"
-
-    [deps.ArrayInterface.extensions]
-    ArrayInterfaceBandedMatricesExt = "BandedMatrices"
-    ArrayInterfaceBlockBandedMatricesExt = "BlockBandedMatrices"
-    ArrayInterfaceCUDAExt = "CUDA"
-    ArrayInterfaceGPUArraysCoreExt = "GPUArraysCore"
-    ArrayInterfaceStaticArraysCoreExt = "StaticArraysCore"
-    ArrayInterfaceTrackerExt = "Tracker"
-
-    [deps.ArrayInterface.weakdeps]
-    BandedMatrices = "aae01518-5342-5314-be14-df237901396f"
-    BlockBandedMatrices = "ffab5731-97b5-5995-9138-79e8c1846df0"
-    CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
-    GPUArraysCore = "46192b85-c4d5-4398-a991-12ede77f4527"
-    StaticArraysCore = "1e83bf80-4336-4d27-bf5d-d5a4f845583c"
-    Tracker = "9f7883ad-71c0-57eb-9f7f-b5c9e6d3789c"
 
 [[deps.ArrayInterfaceCore]]
 deps = ["LinearAlgebra", "SnoopPrecompile", "SparseArrays", "SuiteSparse"]
@@ -612,6 +647,12 @@ git-tree-sha1 = "e30f2f4e20f7f186dc36529910beaedc60cfa644"
 uuid = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 version = "1.16.0"
 
+[[deps.ChangesOfVariables]]
+deps = ["LinearAlgebra", "Test"]
+git-tree-sha1 = "f84967c4497e0e1955f9a582c232b02847c5f589"
+uuid = "9e997f8a-9a97-42d5-a9f1-ce6bfc15e2c0"
+version = "0.1.7"
+
 [[deps.CloseOpenIntervals]]
 deps = ["Static", "StaticArrayInterface"]
 git-tree-sha1 = "70232f82ffaab9dc52585e0dd043b5e0c6b714f1"
@@ -660,19 +701,15 @@ uuid = "bbf7d656-a473-5ed7-a52c-81e309532950"
 version = "0.3.0"
 
 [[deps.Compat]]
-deps = ["UUIDs"]
+deps = ["Dates", "LinearAlgebra", "UUIDs"]
 git-tree-sha1 = "4e88377ae7ebeaf29a047aa1ee40826e0b708a5d"
 uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
 version = "4.7.0"
-weakdeps = ["Dates", "LinearAlgebra"]
-
-    [deps.Compat.extensions]
-    CompatLinearAlgebraExt = "LinearAlgebra"
 
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
-version = "1.0.2+0"
+version = "1.0.1+0"
 
 [[deps.ConcurrentUtilities]]
 deps = ["Serialization", "Sockets"]
@@ -685,14 +722,6 @@ deps = ["LinearAlgebra"]
 git-tree-sha1 = "738fec4d684a9a6ee9598a8bfee305b26831f28c"
 uuid = "187b0558-2788-49d3-abe0-74a17ed4e7c9"
 version = "1.5.2"
-
-    [deps.ConstructionBase.extensions]
-    ConstructionBaseIntervalSetsExt = "IntervalSets"
-    ConstructionBaseStaticArraysExt = "StaticArrays"
-
-    [deps.ConstructionBase.weakdeps]
-    IntervalSets = "8197267c-284f-5f27-9208-e0e47529a953"
-    StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [[deps.Contour]]
 git-tree-sha1 = "d05d9e7b7aedff4e5b51a029dced05cfb6125781"
@@ -733,37 +762,19 @@ version = "5.42.0"
 
 [[deps.DelimitedFiles]]
 deps = ["Mmap"]
-git-tree-sha1 = "9e2f36d3c96a820c678f2f1f1782582fcf685bae"
 uuid = "8bb1440f-4735-579b-a4ab-409b98df4dab"
-version = "1.9.1"
+
+[[deps.DensityInterface]]
+deps = ["InverseFunctions", "Test"]
+git-tree-sha1 = "80c3e8639e3353e5d2912fb3a1916b8455e2494b"
+uuid = "b429d917-457f-4dbc-8f4c-0cc954292b1d"
+version = "0.4.0"
 
 [[deps.DiffEqBase]]
-deps = ["ArrayInterface", "ChainRulesCore", "DataStructures", "DocStringExtensions", "EnumX", "FastBroadcast", "ForwardDiff", "FunctionWrappers", "FunctionWrappersWrappers", "LinearAlgebra", "Logging", "Markdown", "MuladdMacro", "Parameters", "PreallocationTools", "Printf", "RecursiveArrayTools", "Reexport", "Requires", "SciMLBase", "SciMLOperators", "Setfield", "SparseArrays", "Static", "StaticArraysCore", "Statistics", "Tricks", "TruncatedStacktraces", "ZygoteRules"]
+deps = ["ArrayInterface", "ChainRulesCore", "DataStructures", "Distributions", "DocStringExtensions", "EnumX", "FastBroadcast", "ForwardDiff", "FunctionWrappers", "FunctionWrappersWrappers", "LinearAlgebra", "Logging", "Markdown", "MuladdMacro", "Parameters", "PreallocationTools", "Printf", "RecursiveArrayTools", "Reexport", "Requires", "SciMLBase", "SciMLOperators", "Setfield", "SparseArrays", "Static", "StaticArraysCore", "Statistics", "Tricks", "TruncatedStacktraces", "ZygoteRules"]
 git-tree-sha1 = "62c41421bd0facc43dfe4e9776135fe21fd1e1b9"
 uuid = "2b5f629d-d688-5b77-993f-72d75c75574e"
 version = "6.126.0"
-
-    [deps.DiffEqBase.extensions]
-    DiffEqBaseDistributionsExt = "Distributions"
-    DiffEqBaseGeneralizedGeneratedExt = "GeneralizedGenerated"
-    DiffEqBaseMPIExt = "MPI"
-    DiffEqBaseMeasurementsExt = "Measurements"
-    DiffEqBaseMonteCarloMeasurementsExt = "MonteCarloMeasurements"
-    DiffEqBaseReverseDiffExt = "ReverseDiff"
-    DiffEqBaseTrackerExt = "Tracker"
-    DiffEqBaseUnitfulExt = "Unitful"
-    DiffEqBaseZygoteExt = "Zygote"
-
-    [deps.DiffEqBase.weakdeps]
-    Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
-    GeneralizedGenerated = "6b9d7cbe-bcb9-11e9-073f-15a7a543e2eb"
-    MPI = "da04e1cc-30fd-572f-bb4f-1f8673147195"
-    Measurements = "eff96d63-e80a-5855-80a2-b1b0885c5ab7"
-    MonteCarloMeasurements = "0987c9cc-fe09-11e8-30f0-b96dd679fdca"
-    ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
-    Tracker = "9f7883ad-71c0-57eb-9f7f-b5c9e6d3789c"
-    Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
-    Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [[deps.DiffEqCallbacks]]
 deps = ["DataStructures", "DiffEqBase", "ForwardDiff", "LinearAlgebra", "Markdown", "NLsolve", "Parameters", "RecipesBase", "RecursiveArrayTools", "SciMLBase", "StaticArraysCore"]
@@ -776,12 +787,6 @@ deps = ["DiffEqBase", "Distributions", "GPUArraysCore", "LinearAlgebra", "Markdo
 git-tree-sha1 = "26594c6ec8416fb6ef3ed8828fd29c98b10bfaad"
 uuid = "77a26b50-5914-5dd7-bc55-306e6241c503"
 version = "5.17.2"
-
-    [deps.DiffEqNoiseProcess.extensions]
-    DiffEqNoiseProcessReverseDiffExt = "ReverseDiff"
-
-    [deps.DiffEqNoiseProcess.weakdeps]
-    ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
 
 [[deps.DiffResults]]
 deps = ["StaticArraysCore"]
@@ -812,18 +817,10 @@ deps = ["Random", "Serialization", "Sockets"]
 uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[deps.Distributions]]
-deps = ["FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SparseArrays", "SpecialFunctions", "Statistics", "StatsAPI", "StatsBase", "StatsFuns", "Test"]
+deps = ["ChainRulesCore", "DensityInterface", "FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SparseArrays", "SpecialFunctions", "Statistics", "StatsAPI", "StatsBase", "StatsFuns", "Test"]
 git-tree-sha1 = "db40d3aff76ea6a3619fdd15a8c78299221a2394"
 uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
 version = "0.25.97"
-
-    [deps.Distributions.extensions]
-    DistributionsChainRulesCoreExt = "ChainRulesCore"
-    DistributionsDensityInterfaceExt = "DensityInterface"
-
-    [deps.Distributions.weakdeps]
-    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-    DensityInterface = "b429d917-457f-4dbc-8f4c-0cc954292b1d"
 
 [[deps.DocStringExtensions]]
 deps = ["LibGit2"]
@@ -909,20 +906,10 @@ uuid = "1a297f60-69ca-5386-bcde-b61e274b549b"
 version = "1.2.0"
 
 [[deps.FiniteDiff]]
-deps = ["ArrayInterface", "LinearAlgebra", "Requires", "Setfield", "SparseArrays"]
+deps = ["ArrayInterface", "LinearAlgebra", "Requires", "Setfield", "SparseArrays", "StaticArrays"]
 git-tree-sha1 = "c6e4a1fbe73b31a3dea94b1da449503b8830c306"
 uuid = "6a86dc24-6348-571c-b903-95158fe2bd41"
 version = "2.21.1"
-
-    [deps.FiniteDiff.extensions]
-    FiniteDiffBandedMatricesExt = "BandedMatrices"
-    FiniteDiffBlockBandedMatricesExt = "BlockBandedMatrices"
-    FiniteDiffStaticArraysExt = "StaticArrays"
-
-    [deps.FiniteDiff.weakdeps]
-    BandedMatrices = "aae01518-5342-5314-be14-df237901396f"
-    BlockBandedMatrices = "ffab5731-97b5-5995-9138-79e8c1846df0"
-    StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [[deps.FixedPointNumbers]]
 deps = ["Statistics"]
@@ -943,14 +930,10 @@ uuid = "59287772-0a20-5a39-b81b-1366585eb4c0"
 version = "0.4.2"
 
 [[deps.ForwardDiff]]
-deps = ["CommonSubexpressions", "DiffResults", "DiffRules", "LinearAlgebra", "LogExpFunctions", "NaNMath", "Preferences", "Printf", "Random", "SpecialFunctions"]
+deps = ["CommonSubexpressions", "DiffResults", "DiffRules", "LinearAlgebra", "LogExpFunctions", "NaNMath", "Preferences", "Printf", "Random", "SpecialFunctions", "StaticArrays"]
 git-tree-sha1 = "00e252f4d706b3d55a8863432e742bf5717b498d"
 uuid = "f6369f11-7733-5829-9624-2563aa707210"
 version = "0.10.35"
-weakdeps = ["StaticArrays"]
-
-    [deps.ForwardDiff.extensions]
-    ForwardDiffStaticArraysExt = "StaticArrays"
 
 [[deps.FreeType2_jll]]
 deps = ["Artifacts", "Bzip2_jll", "JLLWrappers", "Libdl", "Pkg", "Zlib_jll"]
@@ -1094,6 +1077,12 @@ version = "0.1.3"
 deps = ["Markdown"]
 uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 
+[[deps.InverseFunctions]]
+deps = ["Test"]
+git-tree-sha1 = "6667aadd1cdee2c6cd068128b3d226ebc4fb0c67"
+uuid = "3587e190-3f89-42d0-90ee-14403ec27112"
+version = "0.1.9"
+
 [[deps.IrrationalConstants]]
 git-tree-sha1 = "630b497eafcc20001bba38a4651b327dcfc491d2"
 uuid = "92d709cd-6900-40b7-9082-c6be49f344b6"
@@ -1180,14 +1169,6 @@ deps = ["Formatting", "InteractiveUtils", "LaTeXStrings", "MacroTools", "Markdow
 git-tree-sha1 = "f428ae552340899a935973270b8d98e5a31c49fe"
 uuid = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
 version = "0.16.1"
-
-    [deps.Latexify.extensions]
-    DataFramesExt = "DataFrames"
-    SymEngineExt = "SymEngine"
-
-    [deps.Latexify.weakdeps]
-    DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-    SymEngine = "123dc426-2d89-5057-bbad-38513e3affd8"
 
 [[deps.LayoutPointers]]
 deps = ["ArrayInterface", "LinearAlgebra", "ManualMemory", "SIMDTypes", "Static", "StaticArrayInterface"]
@@ -1284,7 +1265,7 @@ uuid = "d3d80556-e9d4-5f37-9878-2ab0fcc64255"
 version = "7.2.0"
 
 [[deps.LinearAlgebra]]
-deps = ["Libdl", "OpenBLAS_jll", "libblastrampoline_jll"]
+deps = ["Libdl", "libblastrampoline_jll"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [[deps.LinearSolve]]
@@ -1293,35 +1274,11 @@ git-tree-sha1 = "c6a6f78167d7b7c19dfb7148161d7f1962a0b361"
 uuid = "7ed4a6bd-45f5-4d41-b270-4a48e9bafcae"
 version = "2.2.1"
 
-    [deps.LinearSolve.extensions]
-    LinearSolveCUDAExt = "CUDA"
-    LinearSolveHYPREExt = "HYPRE"
-    LinearSolveIterativeSolversExt = "IterativeSolvers"
-    LinearSolveKrylovKitExt = "KrylovKit"
-    LinearSolvePardisoExt = "Pardiso"
-
-    [deps.LinearSolve.weakdeps]
-    CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
-    HYPRE = "b5ffcf37-a2bd-41ab-a3da-4bd9bc8ad771"
-    IterativeSolvers = "42fd0dbc-a981-5370-80f2-aaf504508153"
-    KrylovKit = "0b1a1467-8014-51b9-945f-bf0ae24f4b77"
-    Pardiso = "46dd5b70-b6fb-5a00-ae2d-e8fea33afaf2"
-
 [[deps.LogExpFunctions]]
-deps = ["DocStringExtensions", "IrrationalConstants", "LinearAlgebra"]
+deps = ["ChainRulesCore", "ChangesOfVariables", "DocStringExtensions", "InverseFunctions", "IrrationalConstants", "LinearAlgebra"]
 git-tree-sha1 = "c3ce8e7420b3a6e071e0fe4745f5d4300e37b13f"
 uuid = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
 version = "0.3.24"
-
-    [deps.LogExpFunctions.extensions]
-    LogExpFunctionsChainRulesCoreExt = "ChainRulesCore"
-    LogExpFunctionsChangesOfVariablesExt = "ChangesOfVariables"
-    LogExpFunctionsInverseFunctionsExt = "InverseFunctions"
-
-    [deps.LogExpFunctions.weakdeps]
-    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-    ChangesOfVariables = "9e997f8a-9a97-42d5-a9f1-ce6bfc15e2c0"
-    InverseFunctions = "3587e190-3f89-42d0-90ee-14403ec27112"
 
 [[deps.Logging]]
 uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
@@ -1333,15 +1290,10 @@ uuid = "e6f89c97-d47a-5376-807f-9c37f3926c36"
 version = "1.0.0"
 
 [[deps.LoopVectorization]]
-deps = ["ArrayInterface", "ArrayInterfaceCore", "CPUSummary", "CloseOpenIntervals", "DocStringExtensions", "HostCPUFeatures", "IfElse", "LayoutPointers", "LinearAlgebra", "OffsetArrays", "PolyesterWeave", "PrecompileTools", "SIMDTypes", "SLEEFPirates", "Static", "StaticArrayInterface", "ThreadingUtilities", "UnPack", "VectorizationBase"]
+deps = ["ArrayInterface", "ArrayInterfaceCore", "CPUSummary", "ChainRulesCore", "CloseOpenIntervals", "DocStringExtensions", "ForwardDiff", "HostCPUFeatures", "IfElse", "LayoutPointers", "LinearAlgebra", "OffsetArrays", "PolyesterWeave", "PrecompileTools", "SIMDTypes", "SLEEFPirates", "SpecialFunctions", "Static", "StaticArrayInterface", "ThreadingUtilities", "UnPack", "VectorizationBase"]
 git-tree-sha1 = "e4eed22d70ac91d7a4bf9e0f6902383061d17105"
 uuid = "bdcacae8-1622-11e9-2a5c-532679323890"
 version = "0.12.162"
-weakdeps = ["ChainRulesCore", "ForwardDiff", "SpecialFunctions"]
-
-    [deps.LoopVectorization.extensions]
-    ForwardDiffExt = ["ChainRulesCore", "ForwardDiff"]
-    SpecialFunctionsExt = "SpecialFunctions"
 
 [[deps.MIMEs]]
 git-tree-sha1 = "65f28ad4b594aebe22157d6fac869786a255b7eb"
@@ -1372,7 +1324,7 @@ version = "1.1.7"
 [[deps.MbedTLS_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
-version = "2.28.2+0"
+version = "2.28.0+0"
 
 [[deps.Measures]]
 git-tree-sha1 = "c13304c81eec1ed3af7fc20e75fb6b26092a1102"
@@ -1390,7 +1342,7 @@ uuid = "a63ad114-7e13-5084-954f-fe012c677804"
 
 [[deps.MozillaCACerts_jll]]
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
-version = "2022.10.11"
+version = "2022.2.1"
 
 [[deps.MuladdMacro]]
 git-tree-sha1 = "cac9cc5499c25554cba55cd3c30543cff5ca4fab"
@@ -1440,7 +1392,7 @@ version = "1.3.5+1"
 [[deps.OpenBLAS_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
 uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
-version = "0.3.21+4"
+version = "0.3.20+0"
 
 [[deps.OpenLibm_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -1491,7 +1443,7 @@ version = "6.53.2"
 [[deps.PCRE2_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "efcefdf7-47ab-520b-bdef-62a2eaa19f15"
-version = "10.42.0+0"
+version = "10.40.0+0"
 
 [[deps.PDMats]]
 deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse"]
@@ -1523,9 +1475,9 @@ uuid = "30392449-352a-5448-841d-b1acce4e97dc"
 version = "0.42.2+0"
 
 [[deps.Pkg]]
-deps = ["Artifacts", "Dates", "Downloads", "FileWatching", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "REPL", "Random", "SHA", "Serialization", "TOML", "Tar", "UUIDs", "p7zip_jll"]
+deps = ["Artifacts", "Dates", "Downloads", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "REPL", "Random", "SHA", "Serialization", "TOML", "Tar", "UUIDs", "p7zip_jll"]
 uuid = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
-version = "1.9.0"
+version = "1.8.0"
 
 [[deps.PlotThemes]]
 deps = ["PlotUtils", "Statistics"]
@@ -1544,20 +1496,6 @@ deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers"
 git-tree-sha1 = "75ca67b2c6512ad2d0c767a7cfc55e75075f8bbc"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 version = "1.38.16"
-
-    [deps.Plots.extensions]
-    FileIOExt = "FileIO"
-    GeometryBasicsExt = "GeometryBasics"
-    IJuliaExt = "IJulia"
-    ImageInTerminalExt = "ImageInTerminal"
-    UnitfulExt = "Unitful"
-
-    [deps.Plots.weakdeps]
-    FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
-    GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
-    IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a"
-    ImageInTerminal = "d8c32880-2388-543b-8c61-d9f865259254"
-    Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
@@ -1594,12 +1532,6 @@ deps = ["Adapt", "ArrayInterface", "ForwardDiff", "Requires"]
 git-tree-sha1 = "f739b1b3cc7b9949af3b35089931f2b58c289163"
 uuid = "d236fae5-4411-538c-8e31-a6e3d9e00b46"
 version = "0.4.12"
-
-    [deps.PreallocationTools.extensions]
-    PreallocationToolsReverseDiffExt = "ReverseDiff"
-
-    [deps.PreallocationTools.weakdeps]
-    ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
 
 [[deps.PrecompileTools]]
 deps = ["Preferences"]
@@ -1666,16 +1598,6 @@ deps = ["Adapt", "ArrayInterface", "DocStringExtensions", "GPUArraysCore", "Iter
 git-tree-sha1 = "02ef02926f30d53b94be443bfaea010c47f6b556"
 uuid = "731186ca-8d62-57ce-b412-fbd966d074cd"
 version = "2.38.5"
-
-    [deps.RecursiveArrayTools.extensions]
-    RecursiveArrayToolsMeasurementsExt = "Measurements"
-    RecursiveArrayToolsTrackerExt = "Tracker"
-    RecursiveArrayToolsZygoteExt = "Zygote"
-
-    [deps.RecursiveArrayTools.weakdeps]
-    Measurements = "eff96d63-e80a-5855-80a2-b1b0885c5ab7"
-    Tracker = "9f7883ad-71c0-57eb-9f7f-b5c9e6d3789c"
-    Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [[deps.RecursiveFactorization]]
 deps = ["LinearAlgebra", "LoopVectorization", "Polyester", "SnoopPrecompile", "StrideArraysCore", "TriangularSolve"]
@@ -1793,12 +1715,6 @@ git-tree-sha1 = "56aa73a93cdca493af5155a0338a864ed314222b"
 uuid = "727e6d20-b764-4bd8-a329-72de5adea6c7"
 version = "0.1.16"
 
-    [deps.SimpleNonlinearSolve.extensions]
-    SimpleBatchedNonlinearSolveExt = "NNlib"
-
-    [deps.SimpleNonlinearSolve.weakdeps]
-    NNlib = "872c559c-99b0-510c-b3b7-b6c96a88d5cd"
-
 [[deps.SimpleTraits]]
 deps = ["InteractiveUtils", "MacroTools"]
 git-tree-sha1 = "5d7e3f4e11935503d3ecaf7186eac40602e7d231"
@@ -1826,7 +1742,7 @@ uuid = "a2af1166-a08f-5f64-846c-94a0d3cef48c"
 version = "1.1.1"
 
 [[deps.SparseArrays]]
-deps = ["Libdl", "LinearAlgebra", "Random", "Serialization", "SuiteSparse_jll"]
+deps = ["LinearAlgebra", "Random"]
 uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [[deps.SparseDiffTools]]
@@ -1835,12 +1751,6 @@ git-tree-sha1 = "4c1a57bcbc0b795fbfdc2009e70f9c2fd2815bfe"
 uuid = "47a9eef4-7e08-11e9-0b38-333d64bd3804"
 version = "2.4.1"
 
-    [deps.SparseDiffTools.extensions]
-    SparseDiffToolsZygoteExt = "Zygote"
-
-    [deps.SparseDiffTools.weakdeps]
-    Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
-
 [[deps.Sparspak]]
 deps = ["Libdl", "LinearAlgebra", "Logging", "OffsetArrays", "Printf", "SparseArrays", "Test"]
 git-tree-sha1 = "342cf4b449c299d8d1ceaf00b7a49f4fbc7940e7"
@@ -1848,14 +1758,10 @@ uuid = "e56a9233-b9d6-4f03-8d0f-1825330902ac"
 version = "0.3.9"
 
 [[deps.SpecialFunctions]]
-deps = ["IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
+deps = ["ChainRulesCore", "IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
 git-tree-sha1 = "7beb031cf8145577fbccacd94b8a8f4ce78428d3"
 uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
 version = "2.3.0"
-weakdeps = ["ChainRulesCore"]
-
-    [deps.SpecialFunctions.extensions]
-    SpecialFunctionsChainRulesCoreExt = "ChainRulesCore"
 
 [[deps.Static]]
 deps = ["IfElse"]
@@ -1868,11 +1774,6 @@ deps = ["ArrayInterface", "Compat", "IfElse", "LinearAlgebra", "Requires", "Snoo
 git-tree-sha1 = "33040351d2403b84afce74dae2e22d3f5b18edcb"
 uuid = "0d7ed370-da01-4f52-bd93-41d350b8b718"
 version = "1.4.0"
-weakdeps = ["OffsetArrays", "StaticArrays"]
-
-    [deps.StaticArrayInterface.extensions]
-    StaticArrayInterfaceOffsetArraysExt = "OffsetArrays"
-    StaticArrayInterfaceStaticArraysExt = "StaticArrays"
 
 [[deps.StaticArrays]]
 deps = ["LinearAlgebra", "Random", "StaticArraysCore", "Statistics"]
@@ -1888,7 +1789,6 @@ version = "1.4.0"
 [[deps.Statistics]]
 deps = ["LinearAlgebra", "SparseArrays"]
 uuid = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
-version = "1.9.0"
 
 [[deps.StatsAPI]]
 deps = ["LinearAlgebra"]
@@ -1903,18 +1803,10 @@ uuid = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 version = "0.34.0"
 
 [[deps.StatsFuns]]
-deps = ["HypergeometricFunctions", "IrrationalConstants", "LogExpFunctions", "Reexport", "Rmath", "SpecialFunctions"]
+deps = ["ChainRulesCore", "HypergeometricFunctions", "InverseFunctions", "IrrationalConstants", "LogExpFunctions", "Reexport", "Rmath", "SpecialFunctions"]
 git-tree-sha1 = "f625d686d5a88bcd2b15cd81f18f98186fdc0c9a"
 uuid = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
 version = "1.3.0"
-
-    [deps.StatsFuns.extensions]
-    StatsFunsChainRulesCoreExt = "ChainRulesCore"
-    StatsFunsInverseFunctionsExt = "InverseFunctions"
-
-    [deps.StatsFuns.weakdeps]
-    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-    InverseFunctions = "3587e190-3f89-42d0-90ee-14403ec27112"
 
 [[deps.SteadyStateDiffEq]]
 deps = ["DiffEqBase", "DiffEqCallbacks", "LinearAlgebra", "NLsolve", "Reexport", "SciMLBase"]
@@ -1941,7 +1833,7 @@ uuid = "4607b0f0-06f3-5cda-b6b1-a6196a1729e9"
 [[deps.SuiteSparse_jll]]
 deps = ["Artifacts", "Libdl", "Pkg", "libblastrampoline_jll"]
 uuid = "bea87d4a-7f5b-5778-9afe-8cc45184846c"
-version = "5.10.1+6"
+version = "5.10.1+0"
 
 [[deps.Sundials]]
 deps = ["CEnum", "DataStructures", "DiffEqBase", "Libdl", "LinearAlgebra", "Logging", "PrecompileTools", "Reexport", "SciMLBase", "SparseArrays", "Sundials_jll"]
@@ -1964,7 +1856,7 @@ version = "0.2.2"
 [[deps.TOML]]
 deps = ["Dates"]
 uuid = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
-version = "1.0.3"
+version = "1.0.0"
 
 [[deps.TableTraits]]
 deps = ["IteratorInterfaceExtensions"]
@@ -1981,7 +1873,7 @@ version = "1.10.1"
 [[deps.Tar]]
 deps = ["ArgTools", "SHA"]
 uuid = "a4e569a6-e804-4fa4-b0f3-eef7a1d5b13e"
-version = "1.10.0"
+version = "1.10.1"
 
 [[deps.TensorCore]]
 deps = ["LinearAlgebra"]
@@ -2056,12 +1948,6 @@ deps = ["ConstructionBase", "Dates", "LinearAlgebra", "Random"]
 git-tree-sha1 = "ba4aa36b2d5c98d6ed1f149da916b3ba46527b2b"
 uuid = "1986cc42-f94f-5a68-af5c-568840ba703d"
 version = "1.14.0"
-
-    [deps.Unitful.extensions]
-    InverseFunctionsUnitfulExt = "InverseFunctions"
-
-    [deps.Unitful.weakdeps]
-    InverseFunctions = "3587e190-3f89-42d0-90ee-14403ec27112"
 
 [[deps.UnitfulLatexify]]
 deps = ["LaTeXStrings", "Latexify", "Unitful"]
@@ -2239,7 +2125,7 @@ version = "1.4.0+3"
 [[deps.Zlib_jll]]
 deps = ["Libdl"]
 uuid = "83775a58-1f1d-513f-b197-d71354ab007a"
-version = "1.2.13+0"
+version = "1.2.12+3"
 
 [[deps.Zstd_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -2272,9 +2158,9 @@ uuid = "0ac62f75-1d6f-5e53-bd7c-93b484bb37c0"
 version = "0.15.1+0"
 
 [[deps.libblastrampoline_jll]]
-deps = ["Artifacts", "Libdl"]
+deps = ["Artifacts", "Libdl", "OpenBLAS_jll"]
 uuid = "8e850b90-86db-534c-a0d3-1478176c7d93"
-version = "5.8.0+0"
+version = "5.1.1+0"
 
 [[deps.libfdk_aac_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -2335,28 +2221,37 @@ version = "1.4.1+0"
 # ╟─387227e3-e4d9-4453-8845-b3c730999763
 # ╟─ae46e64f-d968-472c-b92b-204faf27ae7c
 # ╟─1164cc37-2062-4ff9-8463-9edfb21db77a
-# ╟─30c4926d-4b31-4704-9621-c4200faf1f40
 # ╟─bf31c280-5e88-42d0-85bb-3ab11378aca1
 # ╟─f2fbc3f0-8a51-43e6-8e15-15e2fa61124f
 # ╠═10209491-8d9f-4056-9358-09101e533dd5
 # ╟─91ce7b5d-cbcc-4cf5-8999-c2edd5e2bccf
-# ╟─7d6da8c9-bcb3-4d19-86bc-f62bee1bfeeb
-# ╠═d09b3c71-8049-4bf6-b00f-0c93e438ec51
+# ╟─d09b3c71-8049-4bf6-b00f-0c93e438ec51
+# ╟─76ba8fca-8425-4991-a04c-957c5748caa4
 # ╟─c746c416-e559-45a3-84be-f21ab256a5a3
+# ╟─5989cbc6-9e3e-46bf-9e70-8ea992629a9d
+# ╟─fdf8a09a-ff61-4f93-98eb-ceee6f99b1bc
 # ╟─2f830af9-8d21-4b25-add5-6842f0ca0ba5
 # ╟─a642d935-e0e4-4f89-ad12-083ab719f7dd
+# ╟─b3004e4f-0963-483d-b70e-b5ead79791b8
+# ╟─dcc5bb82-0418-4589-a036-073e23afbb1c
+# ╟─6a3e0878-f0a8-49a5-a23d-3edf98c0fc56
 # ╟─71d37f34-2163-4208-a106-54adff1b791c
+# ╟─cfe37f4c-1c34-47a1-9984-e38a3433a5de
+# ╟─ef75728f-0b9f-41ce-9b36-1689952858be
+# ╟─e008a26b-f4b2-4106-b982-69bc34af0c4e
 # ╟─fe0a2c93-b0d1-4e47-b760-feeea03a7ace
+# ╟─c82a5807-ccba-41a7-b3c2-cd4e5bac0ecb
 # ╟─c5a2437e-c77f-4a04-84ce-cb73a682fac5
-# ╠═ab51bd5c-a3a4-40ce-a4b1-343d5d938f8c
+# ╟─ab51bd5c-a3a4-40ce-a4b1-343d5d938f8c
 # ╟─393d4d88-da1a-4aba-bb82-ba1d3e8ec7a3
 # ╟─e2d9c02f-d7aa-4d3a-9a1d-2a0ef14d74ad
 # ╟─ecedd49b-e036-4c9a-94c4-a8e119309dc2
 # ╟─aa70bca1-61f0-4e60-937b-3b42a0b4d493
+# ╟─7c96056a-1d20-4f69-b7c9-9c49d250fce4
 # ╟─e9855f2c-8fc8-40c4-997a-a60a6da3d22b
 # ╟─fa673ba6-677d-41b8-a60d-8519db356c61
 # ╟─d9a0a623-03f9-458d-ab99-fe8a0446ed3c
-# ╠═d11bc08a-641d-426e-8999-805e93afc6ba
+# ╟─d11bc08a-641d-426e-8999-805e93afc6ba
 # ╟─02543f9e-0fb1-4f6d-8290-1a14e6fd4ecd
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

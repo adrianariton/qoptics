@@ -87,12 +87,6 @@ begin
 	md"Some more helper code in this cell."
 end
 
-# ╔═╡ 36b7a636-2198-44da-9ddd-2ee7e193347c
-# ╠═╡ disabled = true
-#=╠═╡
-
-  ╠═╡ =#
-
 # ╔═╡ b576bacc-c769-4b0d-b033-ad1ad0cd4181
 md"""
 # Heralded Single Phonon Generation in an Optomechanical System
@@ -2321,7 +2315,7 @@ version = "0.9.1+5"
 # ╠═5ea35653-e67d-4f33-9bbd-2f59d1c731a7
 # ╟─05bcbadf-b764-4f0a-8115-8938860794ea
 # ╟─a03f56e0-bf39-4645-a57f-0955903cf7a2
-# ╠═69ad33a1-7497-4439-bdfa-8a8e30bd5068
+# ╟─69ad33a1-7497-4439-bdfa-8a8e30bd5068
 # ╟─13430563-5293-4484-8b37-fcab0e442bd4
 # ╟─87b86d27-520c-4947-91cb-ce321f245d26
 # ╟─9c0a28b6-fb44-46cc-85d1-4c1daa4e098a
