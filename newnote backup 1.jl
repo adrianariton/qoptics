@@ -14,11 +14,8 @@ macro bind(def, element)
     end
 end
 
-# ╔═╡ 970718ad-b2a6-4285-899e-ed29ffc8dc85
-begin
+# ╔═╡ 01177799-1814-40da-ad12-05d5215642fd
 using PlutoUI
-PlutoUI.TableOfContents()
-end
 
 # ╔═╡ 4eb251c5-2323-4185-8320-d33316cbf047
 md"""
@@ -37,7 +34,7 @@ This SPDC process allows us to herald the production of a single microwave photo
 
 Thus we obtain the following non-Hermitian Hamiltonian $[1]$,
 
-$$\hat{H} = \hbar g \hat{a}\hat{b} + H.c. +  i \hbar \frac{\gamma_e}{2} \hat{a}^{\dagger}\hat{a},$$
+$$\hat{H} = \hbar g \hat{a}\hat{b} + H.c. +  [-^{??}]i \hbar \frac{\gamma_e}{2} \hat{a}^{\dagger}\hat{a},$$
 
 where 
 -  $\gamma_e$ is the extrinsic loss rate of the optical mode and $\gamma_i$ is its intrinsic loss rate, $g_0$ is the single-photon nonlinear interaction rate and
@@ -81,12 +78,6 @@ The rate of obtaining a $|11\rangle$ pair on which we can herald the single micr
 $$r_0 = \frac{4g_0^2⟨n_p⟩\gamma_e}{(\gamma_e + \gamma_i)^2}$$
 
 """
-
-# ╔═╡ 01177799-1814-40da-ad12-05d5215642fd
-# ╠═╡ disabled = true
-#=╠═╡
-using PlutoUI
-  ╠═╡ =#
 
 # ╔═╡ 7920ef3e-d71e-45a5-8043-790dfb2022e7
 md"""## Analytical solution for time evolution and numerical comparison"""
@@ -310,8 +301,6 @@ md"""
 $$r_e = 2r_0e^{-r_0\Delta t}\frac{\Delta t}{\Delta t + t_r}\text{, where } $$ $$ r_0 = \frac{4g_0^2⟨n_p⟩\gamma_e}{(\gamma_e + \gamma_i)^2}= 16g_0^2\frac{P}{\hbar\omega}\frac{\gamma_e^2}{(\gamma_e + \gamma_i)^4} [*] \text{, because}$$
  
 $$⟨n_p⟩ = \frac{4\gamma_e}{(\gamma_e + \gamma_i)^2} \frac{P}{\hbar \omega}$$
-
-TODO: Add explanation of when the maximum and minmum are
 """
 
 # ╔═╡ c5a2437e-c77f-4a04-84ce-cb73a682fac5
@@ -378,28 +367,53 @@ begin
 
 	revecmany = entanglement_rate(lognₚspan, γₑ, 0 , g₀, dt, tr; moreevents=true)
 
-	
-	plotnp = plot()
-	if guide
-		plot!(lognₚspan, revecmax, label="\$r_e\$ (γₑ = γᵢ)", c=2)
-		plot!(lognₚspan, revec0, label="\$r_e\$ (γᵢ = 0)", c=2, ls=:dash)
-
-	end
-	plot!(lognₚspan, revec, label="\$r_e\$ [1 event]", c=1)
-	plot!(lognₚspan, revecmany .+ revec, xaxis="\$\\log(\$nb of photons in the pump mode\$)\$", label="\$r_e\$ [1 or 2 events]", c=1, ls=:dash)
-	
-	plotpower = plot()
-	if guide
-		plot!(logpspan, revecpmax, label="\$r_e\$ (γₑ = γᵢ)", c=2)
-		plot!(logpspan, revecp0, label="\$r_e\$ (γᵢ = 0)", c=2, ls=:dash)
-	end
-	plot!(logpspan, revecp, xaxis="\$\\log(\$Power / \$\\hbar\\omega)\$", label="\$r_e\$", c=1)
-
-	
 	if (logʳᵃᵗᵉ == true)
-		plot(plotnp, plotpower, layout = grid(2, 1, heights=[0.5, 0.5]), yscale=:log10)
+		logplotnp = plot()
+		if guide
+			plot!(lognₚspan, log10.(revecmax), label="\$\\log(r_e)\$ (γₑ = γᵢ)", c=2)
+			plot!(lognₚspan, log10.(revec0), label="\$\\log(r_e)\$ (γᵢ = 0)", c=2, ls=:dash)
+		end
+		
+		plot!(lognₚspan, log10.(revec), xaxis="\$\\log(\$nb of photons in the pump mode\$)\$", label="\$\\log(r_e)\$ [1 event]", c=1)
+		plot!(lognₚspan, log10.(revecmany .+ revec), label="\$\\log(r_e)\$ [1 or 2 events]", c=1, ls=:dash)
+		
+		# plot!(lognₚspan, log10.(r0vec), label="\$\\log(r_0)\$", c=3, ls=:dash)
+
+		logplotpower = plot()
+		if guide
+			plot!(logpspan, log10.(revecpmax), label="\$\\log(r_e)\$ (γₑ = γᵢ)", c=2)
+			plot!(logpspan, log10.(revecp0), label="\$\\log(r_e)\$ (γᵢ = 0)", c=2, ls=:dash)
+			
+		end
+		plot!(logpspan, log10.(revecp), xaxis="\$\\log(\$Power / \$\\hbar\\omega)\$", label="\$\\log(r_e)\$ [1 event]", c=1)
+		
+		# plot!(logpspan, log10.(scalingfactor * (g₀ * kHz) ^ 2 * 10 .^ logpspan), xaxis="log10(Power * \$\\hbar\\omega\$)", label="Scaling of \$r_0\$", c=3)
+		
+		plot(logplotnp, logplotpower, 
+			layout = grid(2, 1, heights=[0.5, 0.5]))
 	else
-		plot(plotnp, plotpower, layout = grid(2, 1, heights=[0.5, 0.5]))
+		plotnp = plot()
+		if guide
+			plot!(lognₚspan, revecmax, label="\$r_e\$ (γₑ = γᵢ)", c=2)
+			plot!(lognₚspan, revec0, label="\$r_e\$ (γᵢ = 0)", c=2, ls=:dash)
+
+		end
+		# plot!(lognₚspan, r0vec ./ 1000, label="\$r_0\$ (kHz)", c=3, ls=:dash)
+		plot!(lognₚspan, revec, label="\$r_e\$ [1 event]", c=1)
+		plot!(lognₚspan, revecmany .+ revec, xaxis="\$\\log(\$nb of photons in the pump mode\$)\$", label="\$r_e\$ [1 or 2 events]", c=1, ls=:dash)
+		
+		plotpower = plot()
+		if guide
+			plot!(logpspan, revecpmax, label="\$r_e\$ (γₑ = γᵢ)", c=2)
+			plot!(logpspan, revecp0, label="\$r_e\$ (γᵢ = 0)", c=2, ls=:dash)
+		end
+		plot!(logpspan, revecp, xaxis="\$\\log(\$Power / \$\\hbar\\omega)\$", label="\$r_e\$", c=1)
+
+		# plot!(logpspan, scalingfactor * (g₀ * kHz) ^ 2 * 10 .^ logpspan ./ 1000, xaxis="log10(Power * \$\\hbar\\omega\$)", label="Scaling of \$r_0\$", c=3)
+		
+		plot(plotnp, plotpower, 
+			layout = grid(2, 1, heights=[0.5, 0.5]))
+
 	end
 end
 
@@ -451,7 +465,7 @@ While the second source of infidelity is unavoidable, the first can be eliminate
 
 This leads to the same ODE as seen for [Hamiltonian 1](#45929b93-3ce5-4db3-a22a-423a28c8f32d), however the basis for the evolving state is now $|ψ\rangle = c_0|01\rangle + c_1|10\rangle$, **and the Hamiltonian can no longer excite states with more than 1 photon.**
 
-$$\hat{H}_{red} = \hbar g \hat{a}\hat{b}^{\dagger} + H.c. + i \hbar \frac{\gamma_e}{2} \hat{a}^{\dagger}\hat{a}$$
+$$\hat{H}_{red} = \hbar g \hat{a}\hat{b}^{\dagger} + H.c. +  [-^{??}]i \hbar \frac{\gamma_e}{2} \hat{a}^{\dagger}\hat{a}$$
 
 We obtain a microwave entangled pair $|00\rangle \pm |11\rangle$
 
@@ -2324,7 +2338,7 @@ version = "1.4.1+0"
 """
 
 # ╔═╡ Cell order:
-# ╟─970718ad-b2a6-4285-899e-ed29ffc8dc85
+# ╠═8795c6e3-ef3d-4770-a4fd-2f590ef58a70
 # ╟─4eb251c5-2323-4185-8320-d33316cbf047
 # ╟─45929b93-3ce5-4db3-a22a-423a28c8f32d
 # ╟─01177799-1814-40da-ad12-05d5215642fd
@@ -2341,14 +2355,14 @@ version = "1.4.1+0"
 # ╠═10209491-8d9f-4056-9358-09101e533dd5
 # ╟─91ce7b5d-cbcc-4cf5-8999-c2edd5e2bccf
 # ╟─7d6da8c9-bcb3-4d19-86bc-f62bee1bfeeb
-# ╠═d09b3c71-8049-4bf6-b00f-0c93e438ec51
+# ╟─d09b3c71-8049-4bf6-b00f-0c93e438ec51
 # ╟─c746c416-e559-45a3-84be-f21ab256a5a3
 # ╟─2f830af9-8d21-4b25-add5-6842f0ca0ba5
 # ╟─a642d935-e0e4-4f89-ad12-083ab719f7dd
 # ╟─71d37f34-2163-4208-a106-54adff1b791c
 # ╟─fe0a2c93-b0d1-4e47-b760-feeea03a7ace
 # ╟─c5a2437e-c77f-4a04-84ce-cb73a682fac5
-# ╠═ab51bd5c-a3a4-40ce-a4b1-343d5d938f8c
+# ╟─ab51bd5c-a3a4-40ce-a4b1-343d5d938f8c
 # ╟─393d4d88-da1a-4aba-bb82-ba1d3e8ec7a3
 # ╟─e2d9c02f-d7aa-4d3a-9a1d-2a0ef14d74ad
 # ╟─ecedd49b-e036-4c9a-94c4-a8e119309dc2
@@ -2356,7 +2370,7 @@ version = "1.4.1+0"
 # ╟─e9855f2c-8fc8-40c4-997a-a60a6da3d22b
 # ╟─fa673ba6-677d-41b8-a60d-8519db356c61
 # ╟─d9a0a623-03f9-458d-ab99-fe8a0446ed3c
-# ╠═d11bc08a-641d-426e-8999-805e93afc6ba
+# ╟─d11bc08a-641d-426e-8999-805e93afc6ba
 # ╟─02543f9e-0fb1-4f6d-8290-1a14e6fd4ecd
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
