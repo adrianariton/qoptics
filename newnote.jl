@@ -24,9 +24,11 @@ end
 md"""
 # Optically-Heralded Entanglement of Superconducting Systems in Quantum Networks
 
-*Supplementary to "Optically-Heralded Entanglement of Superconducting Systems in Quantum Networks" by Stefan Krastanov, Hamza Raniwala, Jeffrey Holzgrafe, Kurt Jacobs, Marko Lončar, Matthew J. Reagor, and Dirk R. Englund 2021*
+*Supplementary to "Optically-Heralded Entanglement of Superconducting Systems in Quantum Networks" by Stefan Krastanov, Hamza Raniwala, Jeffrey Holzgrafe, Kurt Jacobs, Marko Lončar, Matthew J. Reagor, and Dirk R. Englund 2021, and adapted into a notebook by Adrian Ariton and Alexandru Ariton*
 
-*Adapted into a notebook by Adrian Ariton and Alexandru Ariton*
+> This notebook explains the tradeoffs between the number of generated entangled particles and their accuracy. It aims to find an equilibrium between these two, by proposing optical networking via heralding end-to-end entanglement with one detected photon and teleporrtation. This approach offers advantages over traditional methods by leveraging heralding and teleportation, which can overcome limitations associated with low microwave-optical coupling efficiency and added noise. 
+
+The paper this notebook is based on shows that today’s transduction hardware can run the heralding scheme that will be discussed while providing orders of magnitude improvement in the networking fidelity compared to the typical deterministic transduction.
 
 A typical electro-optic transducer uses a $χ^{(2)}$ nonlinear interaction between: 
 - a *classical optical pump mode* $\hat{p}$ which can be replaced by a *classical field* with the same amplitude $\hat{p} → \sqrt{⟨n_p⟩}$, where $\sqrt{⟨n_p⟩}$ is the average number of photons in the mode
@@ -173,7 +175,7 @@ begin
 
 	# c_0 and c_1 are extracted from sol
 	sol_small = solve(schrodinger_small; dt=1e-8)
-	md"""### Components visualization"""
+	md"""### State visualization in time"""
 end
 
 # ╔═╡ 91ce7b5d-cbcc-4cf5-8999-c2edd5e2bccf
@@ -429,6 +431,9 @@ md"""` Pump pulse duration: ∆t (.1µs)  : `$(@bind dtµs Slider(1:0.01:100; de
 # ╔═╡ 7ab52be5-fecd-440d-bd5d-60489ff10f3b
 md"""` Extrinsic loss rate γₑ | log₁₀(γₑ (MHz)) : `$slγₑ"""
 
+# ╔═╡ 7a602c0a-2615-44ad-af85-4e67f4ab1070
+md"""`The single-photon nonlinear interaction rate log₁₀(g₀ (kHz))` : $slg """
+
 # ╔═╡ ab51bd5c-a3a4-40ce-a4b1-343d5d938f8c
 md"""` γᵢ/γₑ : `$(@bind γᵢfγₑ Slider(0:0.01:1; default=1, show_value=true))"""
 
@@ -444,6 +449,14 @@ Markdown.parse("""
 |:-----------------|:--------------------------|
 |`$(g * kHz / (γₑ * MHz))`      | `$(get_regime(g, γₑ))`    |
 """)
+
+# ╔═╡ ef86c88a-264b-4c5b-a916-0a5036d7c3ef
+Markdown.parse("""
+|g             | nₚ    | gᵖʳᶦᵐᵉ            |g₀      |γₑ       |
+|:-------------|:------|:------------------|:---------|:--------|
+|`$g` kHz      | `$nₚ` | `$gᵖʳᶦᵐᵉ` MHz     | `$g₀` kHz |`$γₑ` MHz|
+""")
+
 
 # ╔═╡ ecedd49b-e036-4c9a-94c4-a8e119309dc2
 begin
@@ -545,9 +558,12 @@ Also given that the ratio of photons that actually reach the photodetector is eq
 
 Due to missing half of the healding events we need to reset the microwave cavity after each attempt which results in a delay of $\sim 1 µs$ that limits the maximal entanglement rate."""
 
+# ╔═╡ 33571876-74b4-4a39-a541-f777880d7fce
+md"""Typical hardware parameters of state-of-the-art devices ($γ_e = γ_i = 100MHz$   and $g_0 = 1kHz$) will allow pair generation rates of $100kHz$ at fidelities of $0.99$, while suffering $0.1mW$ of in-fridge heating due to leakage from the pump."""
+
 # ╔═╡ e9855f2c-8fc8-40c4-997a-a60a6da3d22b
 md"""
-TODO: plot other lines from paper and explain them
+TODO: plot other lines from paper (with purification and in-fridge heating) and explain them
 """
 
 # ╔═╡ fa673ba6-677d-41b8-a60d-8519db356c61
@@ -2372,14 +2388,17 @@ version = "1.4.1+0"
 # ╟─c82a5807-ccba-41a7-b3c2-cd4e5bac0ecb
 # ╟─c5a2437e-c77f-4a04-84ce-cb73a682fac5
 # ╟─7ab52be5-fecd-440d-bd5d-60489ff10f3b
+# ╟─7a602c0a-2615-44ad-af85-4e67f4ab1070
 # ╟─ab51bd5c-a3a4-40ce-a4b1-343d5d938f8c
 # ╟─393d4d88-da1a-4aba-bb82-ba1d3e8ec7a3
 # ╟─e2d9c02f-d7aa-4d3a-9a1d-2a0ef14d74ad
 # ╟─8dfaa441-de2e-47f4-869d-bf4471541b22
+# ╟─ef86c88a-264b-4c5b-a916-0a5036d7c3ef
 # ╟─ecedd49b-e036-4c9a-94c4-a8e119309dc2
 # ╟─aa70bca1-61f0-4e60-937b-3b42a0b4d493
 # ╟─7c96056a-1d20-4f69-b7c9-9c49d250fce4
 # ╟─d146c7d9-94c3-4220-b2c3-7f9025a4c04d
+# ╟─33571876-74b4-4a39-a541-f777880d7fce
 # ╟─e9855f2c-8fc8-40c4-997a-a60a6da3d22b
 # ╟─fa673ba6-677d-41b8-a60d-8519db356c61
 # ╟─d9a0a623-03f9-458d-ab99-fe8a0446ed3c
