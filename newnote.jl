@@ -24,6 +24,10 @@ end
 md"""
 # Optically-Heralded Entanglement of Superconducting Systems in Quantum Networks
 
+*Supplementary to "Optically-Heralded Entanglement of Superconducting Systems in Quantum Networks" by Stefan Krastanov, Hamza Raniwala, Jeffrey Holzgrafe, Kurt Jacobs, Marko Lončar, Matthew J. Reagor, and Dirk R. Englund 2021*
+
+*Adapted into a notebook by Adrian Ariton and Alexandru Ariton*
+
 A typical electro-optic transducer uses a $χ^{(2)}$ nonlinear interaction between: 
 - a *classical optical pump mode* $\hat{p}$ which can be replaced by a *classical field* with the same amplitude $\hat{p} → \sqrt{⟨n_p⟩}$, where $\sqrt{⟨n_p⟩}$ is the average number of photons in the mode
 - an *optical mode* $\hat{a}$
@@ -82,6 +86,12 @@ $$r_0 = \frac{4g_0^2⟨n_p⟩\gamma_e}{(\gamma_e + \gamma_i)^2}$$
 
 """
 
+# ╔═╡ 01177799-1814-40da-ad12-05d5215642fd
+# ╠═╡ disabled = true
+#=╠═╡
+using PlutoUI
+  ╠═╡ =#
+
 # ╔═╡ 7920ef3e-d71e-45a5-8043-790dfb2022e7
 md"""### Analytical solution for time evolution and numerical comparison"""
 
@@ -89,19 +99,25 @@ md"""### Analytical solution for time evolution and numerical comparison"""
 md"""We can plot the solution $|\psi\rangle$ using the aforementioned formulas, or we can solve it numerically using julia's DifferentialEquations library. The following code can be modified to solve for any kind of Hamiltonian.
 """
 
+# ╔═╡ 762c3311-da7f-4f0c-b7da-5df285f404cd
+md"""Below we plot numerical and analytical solutions for the components of both $|00\rangle$ and $|11\rangle$ of state $|\psi\rangle$ with respect to time. Move the sliders above to modify the set of parameters or to widen the time interval for the graph. 
+
+A logarithmic scale has been chosen for most sliders to facilitate the visualization of a wider range of parameters.
+"""
+
 # ╔═╡ cff02deb-0973-4a5c-b905-a38a48ec1e61
-md"""`The single-photon nonlinear interaction rate log₁₀(g₀ (kHz)) : `$(@bind log₁₀g₀ Slider(0:0.25:6; default=0, show_value=true))"""
+md"""`The single-photon nonlinear interaction rate log₁₀(g₀ (kHz)) : `$(slg = @bind log₁₀g₀ Slider(0:0.25:6; default=0, show_value=true))"""
 
 # ╔═╡ ff17c447-bb69-4455-8819-6fa625addc7a
 md"""
-`Particle number (logarithmic) log₁₀(nₚ) : `$(@bind log₁₀nₚ Slider(0:0.5:7; default=2, show_value=true))
+`Particle number (logarithmic) log₁₀(nₚ) : `$(slnₚ = @bind log₁₀nₚ Slider(0:0.5:7; default=2, show_value=true))
 """
 
 # ╔═╡ 387227e3-e4d9-4453-8845-b3c730999763
-md"""` Extrinsic loss rate γₑ (MHz) : `$(@bind γₑ Slider(0:1:200; default=100, show_value=true))"""
+md"""` Extrinsic loss rate γₑ | log₁₀(γₑ (MHz)) : `$(slγₑ = @bind log₁₀γₑ Slider(-4:0.05:4; default=2, show_value=true))"""
 
 # ╔═╡ ae46e64f-d968-472c-b92b-204faf27ae7c
-md"""` Time interval: [0 tᶠᶦⁿ] ( .1 µs) | log(tᶠᶦⁿ): `$(@bind logtᶠᶦⁿ Slider(0:0.1:9; default=1, show_value=true))"""
+md"""` Time interval: [0 tᶠᶦⁿ] ( .1 µs) | log(tᶠᶦⁿ): `$(sllogtᶠᶦⁿ = @bind logtᶠᶦⁿ Slider(0:0.1:9; default=3, show_value=true))"""
 
 # ╔═╡ 1164cc37-2062-4ff9-8463-9edfb21db77a
 begin
@@ -113,6 +129,7 @@ end
 begin
 	g₀ = 10 ^ log₁₀g₀
 	nₚ = 10^log₁₀nₚ
+	γₑ = 10^log₁₀γₑ
 	g = g₀ * sqrt(nₚ)
 	if (γₑ)^2 / 16 - (g / 1000)^2 > 0
 		gᵖʳᶦᵐᵉ = sqrt((γₑ)^2 / 16 - (g / 1000)^2)
@@ -149,10 +166,21 @@ begin
 	md""""""
 end
 
+# ╔═╡ cdf312f8-2ed1-49f0-9b85-d3ad58b31ec7
+begin
+	tspan_small = (0.0, 10.0)
+	schrodinger_small = ODEProblem(f, ψ0, tspan_small)
+
+	# c_0 and c_1 are extracted from sol
+	sol_small = solve(schrodinger_small; dt=1e-8)
+	md"""### Components visualization"""
+end
+
 # ╔═╡ 91ce7b5d-cbcc-4cf5-8999-c2edd5e2bccf
 begin
 	deltat = tᶠᶦⁿ/1000
 	t = 0:deltat:tᶠᶦⁿ
+	t_small = 0:0.1:10
 	
 	using Plots
 	
@@ -179,30 +207,34 @@ begin
 
 	# plot(sol.t,  c0ᵣₑₐₗ, linewidth=3, ls=:dash, label = "\$real(c_0)\$")
 	# plot(sol.t,  c0ᵣₑₐₗ, linewidth=3, ls=:dash, label = "\$real(c_0)\$")
-	md"""Below we plot numerical and analytical solutions for the components of both $|00\rangle$ and $|11\rangle$ of state $|\psi\rangle$ with respect to time. Move the sliders above in order to modify the set of parameters.
-"""
+	md""""""
 	
 end
 
 # ╔═╡ f2fbc3f0-8a51-43e6-8e15-15e2fa61124f
 Markdown.parse("""
-|g             | nₚ    | gᵖʳᶦᵐᵉ            |tᶠᶦⁿ      |
-|:-------------|:------|:------------------|:---------|
-|`$g` kHz      | `$nₚ` | `$gᵖʳᶦᵐᵉ` MHz     | `$tᶠᶦⁿ` * .1 µs |
+|g             | nₚ    | gᵖʳᶦᵐᵉ            |tᶠᶦⁿ      |γₑ       |
+|:-------------|:------|:------------------|:---------|:--------|
+|`$g` kHz      | `$nₚ` | `$gᵖʳᶦᵐᵉ` MHz     | `$(tᶠᶦⁿ/10)` µs |`$γₑ` MHz|
 """)
 
 
 # ╔═╡ d09b3c71-8049-4bf6-b00f-0c93e438ec51
 begin
-	# imaginary of c1
-	c1vec = -exp.(-γₑ * MHz / 4 * (t / factor)) .* (g * kHz / (gᵖʳᶦᵐᵉ * MHz)) .* sinh.(gᵖʳᶦᵐᵉ * MHz * (t / factor))
+	function analytical_components(t)
+		# imaginary of c1
+		c1vec = -exp.(-γₑ * MHz / 4 * (t / factor)) .* (g * kHz / (gᵖʳᶦᵐᵉ * MHz)) .* sinh.(gᵖʳᶦᵐᵉ * MHz * (t / factor))
+	
+		# realpart of c0
+		c0vec = exp.(-γₑ * MHz / 4 * (t / factor)) .* (
+			(γₑ * MHz / (4 * gᵖʳᶦᵐᵉ * MHz)) .* sinh.(gᵖʳᶦᵐᵉ * MHz * (t / factor)) .+ cosh.(gᵖʳᶦᵐᵉ * MHz * (t / factor)))
+	
+		c0vec = real(c0vec)
+		c1vec = real(c1vec)
+		return c0vec, c1vec
+	end
 
-	# realpart of c0
-	c0vec = exp.(-γₑ * MHz / 4 * (t / factor)) .* (
-		(γₑ * MHz / (4 * gᵖʳᶦᵐᵉ * MHz)) .* sinh.(gᵖʳᶦᵐᵉ * MHz * (t / factor)) .+ cosh.(gᵖʳᶦᵐᵉ * MHz * (t / factor)))
-
-	c0vec = real(c0vec)
-	c1vec = real(c1vec)
+	c0vec, c1vec = analytical_components(t)
 
 	# ploting graphs
 
@@ -213,6 +245,9 @@ begin
 	# Imag(c1)
 	c1ᵖˡᵒᵗ = plot(t,  real(c1vec), label="\$\\Im{(c_1)}\$ analytical", c=2)
 			 plot!(sol.t,  c1ᵢₘ,   linewidth=3, ls=:dash, label = "\$\\Im{(c_1)}\$ numerical", c=2, xaxis="time (.1µs)")
+
+	
+	
 	plot(
 	    c0ᵖˡᵒᵗ,
 	    
@@ -220,6 +255,7 @@ begin
 		
 		layout = grid(2, 1, heights=[0.5, 0.5])
 	)
+
 	
 end
 
@@ -239,6 +275,9 @@ while waiting for a click at the detector. A click heralds
 the creation of single photon in the microwave mode. This is called **single-click event**
 """
 
+# ╔═╡ ee358a4b-5c94-4bd1-b2a2-3c9846abf38f
+md""""""
+
 # ╔═╡ fdf8a09a-ff61-4f93-98eb-ceee6f99b1bc
 md"""### Rate of photon generation
 """
@@ -247,7 +286,7 @@ md"""### Rate of photon generation
 md"""
 Restricting ourselves to the space spanned by $|00\rangle$ and $|11\rangle$, we can easily find **the probability that the photon remains undetected at time t** as the squared norm of $|\psi\rangle$:
 
-$$\langle\psi(t)|\psi(t)\rangle \sim e^{(2g' - \frac{\gamma_e}{2})t} \sim e^{-\frac{4|g|^2}{\gamma_e}t}$$
+$$|c_0|^2 + |c_1|^2 = \langle\psi(t)|\psi(t)\rangle \sim e^{(2g' - \frac{\gamma_e}{2})t} \sim e^{-\frac{4|g|^2}{\gamma_e}t}$$
 
 
 which is consistent to the previous deduction of $r_0$ as it corresponds to a Poissonian detection process with rate
@@ -256,20 +295,50 @@ which is consistent to the previous deduction of $r_0$ as it corresponds to a Po
 Below we plot the rate of photon generation $r_0$ with respect to time. The afforementioned Poissonian approximation is also ploted in order check that they are infact similar.
 """
 
+# ╔═╡ 2c03e491-a652-4548-afae-3384788c0b2b
+begin
+function get_regime(g, γₑ)
+	raport = g * kHz / (γₑ * MHz)
+	message = "Respecting our regime"
+	if raport > 0.25
+		message = "Tons of oscilations (g' is imaginary)"
+	elseif raport > 0.1
+		message = "Outside of our regime"
+	elseif raport > 0.01
+		message = "Begining to break the regime"
+	end
+	return message
+end
+	md""""""
+end
+
+# ╔═╡ aa27c4d0-161c-44af-a235-8cffd0e17393
+md"""Show $e^{(2g' - \frac{\gamma_e}{2})t}$ ` approximation : `$(@bind approx2 CheckBox(default=false))"""
+
+# ╔═╡ 21aebabf-c60f-444d-9d45-36df2ac3ab38
+md"""` Extrinsic loss rate γₑ | log₁₀(γₑ (MHz)) : `$slγₑ"""
+
+# ╔═╡ 71539848-3b56-4d37-a25d-85c6feb3c9c9
+Markdown.parse("""
+|g / γₑ            | Comments 				   |
+|:-----------------|:--------------------------|
+|`$(g * kHz / (γₑ * MHz))`      | `$(get_regime(g, γₑ))`    |
+""")
+
+
 # ╔═╡ a642d935-e0e4-4f89-ad12-083ab719f7dd
 begin
-	plot(title="Probability that the photon remains undetected")
+	plot(title="Probability that the photon remains undetected in time")
 	
 	plot!(t, exp.(-4*abs(g * kHz)^2 / (γₑ * MHz) * t / factor), linewidth=1, label = "Poissonian Aproximation", c=1)
-	
-	plot!(t, real(exp.((2 * gᵖʳᶦᵐᵉ - γₑ/2) *MHz * t / factor)), linewidth=1, ls=:dash, label = "Aproximation [Real Part]", c=1)
-	
-	if real(gᵖʳᶦᵐᵉ) == 0
-		plot!(t, imag(exp.((2 * gᵖʳᶦᵐᵉ - γₑ/2) *MHz * t / factor)), linewidth=1, ls=:dot, label = "Aproximation [Imaginary Part]", c=1)
 
+	if approx2
+		plot!(t, real(exp.((2 * gᵖʳᶦᵐᵉ - γₑ/2) *MHz * t / factor)), linewidth=1, ls=:dash, label = "Aproximation [Real Part]", c=1)
 		
+		if real(gᵖʳᶦᵐᵉ) == 0
+			plot!(t, imag(exp.((2 * gᵖʳᶦᵐᵉ - γₑ/2) *MHz * t / factor)), linewidth=1, ls=:dashdotdot, label = "Aproximation [Imaginary Part]", c=1)
+		end
 	end
-	
 	plot!(sol.t,  c0ᵣₑₐₗ .* c0ᵣₑₐₗ +  c1ᵢₘ .* c1ᵢₘ, linewidth=1, ls=:dash, label = "\$\\langle\\psi(t)|\\psi(t)\\rangle\$ (numerical)", c=2, xaxis="time (.1µs)")
 
 	plot!(t,  (c0vec .* c0vec + c1vec .* c1vec), label = "\$\\langle\\psi(t)|\\psi(t)\\rangle\$ (analytical solution)", linewidth=1, c=2)
@@ -284,7 +353,9 @@ html"""
 
 # ╔═╡ dcc5bb82-0418-4589-a036-073e23afbb1c
 md"""
-As we can notice from the figure, the probability that the photon remains undetected at a given time can be modeled with a Poissonian detection event with rate $r_0$. 
+As we can notice from the figure, the probability that the photon remains undetected at a given time can be modeled with a **Poissonian detection event with rate** $r_0$ when $g \ll \gamma_e$. 
+
+However if $g$ is significantly large, or $\gamma_e$ is significantly small w.r.t $g$, our regime begins to break and the approximation is no longer that accurate, although it can still be useful to some degree. We also notice that the rate of photon generation $r_0$ gets bigger (the graph gets further away from the Y axis) as $\gamma_e$ gets smaller, which is expected.
 
 In the following section we explore the way coupled coherent pumps help us generate entangled bell pairs as well as the balance between their rate of generation and their fidelity.
 """
@@ -353,7 +424,10 @@ Below we plot the entanglement rate $r_e$ with respect to the power of and the n
 md""""""
 
 # ╔═╡ c5a2437e-c77f-4a04-84ce-cb73a682fac5
-md"""` Time interval: ∆t (.1µs)  : `$(@bind dtµs Slider(1:0.01:10; default=1, show_value=true))"""
+md"""` Pump pulse duration: ∆t (.1µs)  : `$(@bind dtµs Slider(1:0.01:100; default=1, show_value=true))"""
+
+# ╔═╡ 7ab52be5-fecd-440d-bd5d-60489ff10f3b
+md"""` Extrinsic loss rate γₑ | log₁₀(γₑ (MHz)) : `$slγₑ"""
 
 # ╔═╡ ab51bd5c-a3a4-40ce-a4b1-343d5d938f8c
 md"""` γᵢ/γₑ : `$(@bind γᵢfγₑ Slider(0:0.01:1; default=1, show_value=true))"""
@@ -363,6 +437,13 @@ md"""`Logarithmic y(entanglement rate) axis logʳᵃᵗᵉ : `$(@bind logʳᵃ�
 
 # ╔═╡ e2d9c02f-d7aa-4d3a-9a1d-2a0ef14d74ad
 md"""`Guide : `$(@bind guide CheckBox(default=false))"""
+
+# ╔═╡ 8dfaa441-de2e-47f4-869d-bf4471541b22
+Markdown.parse("""
+|g / γₑ            | Comments 				   |
+|:-----------------|:--------------------------|
+|`$(g * kHz / (γₑ * MHz))`      | `$(get_regime(g, γₑ))`    |
+""")
 
 # ╔═╡ ecedd49b-e036-4c9a-94c4-a8e119309dc2
 begin
@@ -431,8 +512,8 @@ begin
 		plot!(nₚspan, revec0, label="\$r_e\$ (γᵢ = 0)", c=2, ls=:dash)
 
 	end
-	plot!(nₚspan, revec, label="\$r_e\$ [1 event]", c=1)
-	plot!(nₚspan, revecmany .+ revec, xaxis="nb of photons in the pump mode", label="\$r_e\$ [1 or 2 events]", c=1, ls=:dash)
+	plot!(nₚspan, revec, label="\$r_e\$ [1 click event]", c=1)
+	plot!(nₚspan, revecmany .+ revec, xaxis="nb of photons in the pump mode", label="\$r_e\$ [1 or 2 click events]", c=1, ls=:dash)
 	
 	plotpower = plot(legend=:none)
 	if guide
@@ -451,8 +532,18 @@ end
 
 # ╔═╡ 7c96056a-1d20-4f69-b7c9-9c49d250fce4
 html"""
-	<sub><sup>Click the eye icon to the left to see or modify the code the plots the following graph</sup></sub>
+	<sub><sup>
+Click the eye icon to the left to see or modify the code the plots the following graph</sup></sub>
 	"""
+
+# ╔═╡ d146c7d9-94c3-4220-b2c3-7f9025a4c04d
+md"""Remember that a click event heralds the creation of single photon in the microwave mode.
+
+As we can see, keeping the ratio between the intrinsic and extrinsic loss rates equal to 1, the entanglement rate scales as $\gamma_e^{-2}$. So we can see that as $\gamma_e$ gets smaller, i.e. we begin to break our regime, the **entanglement rate increases**, however, as we will see in the following section, the **fidelity of the generated bell pairs gets smaller**. We need to find the balance between the two!
+
+Also given that the ratio of photons that actually reach the photodetector is equal to $\frac{\gamma_e}{\gamma_e + \gamma_i} = 0.5$, we miss half of the heralding events when the maximal entanglement rate is reached ($\gamma_e = \gamma_i$). 
+
+Due to missing half of the healding events we need to reset the microwave cavity after each attempt which results in a delay of $\sim 1 µs$ that limits the maximal entanglement rate."""
 
 # ╔═╡ e9855f2c-8fc8-40c4-997a-a60a6da3d22b
 md"""
@@ -467,27 +558,64 @@ Under our initial assumptions:
 - an internal loss rate $\gamma_i$ does **NOT** affect the fidelity of the obtained bell pairs (see [2])
 - the fidelity remains unchanged by insertion loss in the optical network [3]
 
-Breaking our regime, especially *Assumption 2* ( $g ≪ γ$ ) , the 3rd fidelity begins to break for two reasons:
+Breaking our regime, especially *Assumption 2* ( $g ≪ γ$ ) , the insertion loss  fidelity begins to break for two reasons:
 1. the SPDC process will excite states that contain more than one photon
 2. there will be a small probability of $\frac{|c_1|^2}{|c_0|^2 + |c_1|^2}$ that the SPDC will simultaneously produce a photon in each of the two resonators
 
 Both scale as $g/\gamma$
+
+Given that the infidelities scale proportionate to $\frac{1}{\gamma}$, and the entanglement rate scales proportionate to $\gamma_e^{-2}$, we notice that higher entanglement rate also means higher infidelities. 
+
+In the following sections we analyze how the infidelities grow when we begin to go outside of our assumptions, and how we can find a balance between the entanglement rate and the Bell pair fidelities.
 
 """
 
 # ╔═╡ d9a0a623-03f9-458d-ab99-fe8a0446ed3c
 md"""### Infidelity due to two-photon-excitations"""
 
+# ╔═╡ 0ed17d30-ca8d-4ccc-bcd7-09c63cec38e0
+md"""In the following graph we can visualize the probability that the SPDC will produce photon in both resonators. This graph allows us to see how the infidelity grows with respect to $g / γₑ$
+
+One can modify the first two sliders in order to increase $g$ which is equal to $g_0\sqrt{⟨n_p⟩}$ or modify the 3rd slider to decrease $\gamma_e$ to see how breaking the assumed regime increases the two-photon-excitation infidelity"""
+
+# ╔═╡ d42743b8-7a16-4445-adfd-82809b1d9d58
+md"""`The single-photon nonlinear interaction rate log₁₀(g₀ (kHz))` : $slg """
+
+# ╔═╡ 63bb7260-a5b2-4206-9d5c-77684ecfdf36
+md"""
+`Particle number (logarithmic) log₁₀(nₚ) : `$slnₚ
+"""
+
+# ╔═╡ b0f49879-df51-44b4-99a9-603f338ad884
+md"""` Extrinsic loss rate γₑ | log₁₀(γₑ (MHz)) : `$slγₑ"""
+
+# ╔═╡ 95516f4e-53b1-43b8-b4a6-8457c6742ad9
+md"""` Time interval: [0 tᶠᶦⁿ] ( .1 µs) | log(tᶠᶦⁿ): `$sllogtᶠᶦⁿ"""
+
+# ╔═╡ 2a0e2d1d-6e6e-4081-99bb-ca6eaf696399
+Markdown.parse("""
+|g / γₑ            | Comments 				   |
+|:-----------------|:--------------------------|
+|`$(g * kHz / (γₑ * MHz))`      | `$(get_regime(g, γₑ))`    |
+""")
+
+
 # ╔═╡ d11bc08a-641d-426e-8999-805e93afc6ba
 begin
-	plot(t, real(abs.(c1vec).^2 ./ (abs.(c0vec) .^2 .+ abs.(c1vec) .^ 2)), xaxis="Time (.1µs )", yaxis="Two-photon-excitations infidelity", label=:none)
+	plot(title="Two-photon-excitations infidelity")
+	plot!(t, real(abs.(c1vec).^2 ./ (abs.(c0vec) .^2 .+ abs.(c1vec) .^ 2)), xaxis="Time (.1µs )", label="Analytical")
 
-	plot(sol.t, real(abs.(c1ᵢₘ).^2 ./ (abs.(c0ᵣₑₐₗ) .^2 .+ abs.(c1ᵢₘ) .^ 2)), xaxis="Time (.1µs )", yaxis="Two-photon-excitations infidelity", label=:none)
+	plot!(sol.t, real(abs.(c1ᵢₘ).^2 ./ (abs.(c0ᵣₑₐₗ) .^2 .+ abs.(c1ᵢₘ) .^ 2)), xaxis="Time (.1µs )", label="Numerical", ls=:dash)
 	
 	# TODO change to fit
 	#plot!(t, (t ./ t) * g * kHz / (γₑ * MHz), ls=:dash, c=2)
 	
 end
+
+# ╔═╡ e81ca2e2-24f4-4f3c-aa0f-11a9ca9b00f1
+md"""As we can see, this probability is negligible when $g ≪ γ_e$, but becomes noticeable when $g / γₑ$ becomes larger. When $g / γₑ$ close to $0.25$, meaning $g' \to 0$, the probability grows even faster, as we begin to test the limits of our regime.
+
+Also when $g / γₑ > 0.25$, we begin to notice oscilations both in the **two-photon-excitations infidelity** as well as in the components of $|\psi\rangle$ itself."""
 
 # ╔═╡ 02543f9e-0fb1-4f6d-8290-1a14e6fd4ecd
 md"""## Workarounds
@@ -2210,6 +2338,9 @@ version = "1.4.1+0"
 # ╟─01177799-1814-40da-ad12-05d5215642fd
 # ╟─7920ef3e-d71e-45a5-8043-790dfb2022e7
 # ╟─f833a02d-aba5-4046-9a66-2e7af298a793
+# ╠═10209491-8d9f-4056-9358-09101e533dd5
+# ╟─cdf312f8-2ed1-49f0-9b85-d3ad58b31ec7
+# ╟─762c3311-da7f-4f0c-b7da-5df285f404cd
 # ╟─cff02deb-0973-4a5c-b905-a38a48ec1e61
 # ╟─ff17c447-bb69-4455-8819-6fa625addc7a
 # ╟─387227e3-e4d9-4453-8845-b3c730999763
@@ -2217,14 +2348,18 @@ version = "1.4.1+0"
 # ╟─1164cc37-2062-4ff9-8463-9edfb21db77a
 # ╟─bf31c280-5e88-42d0-85bb-3ab11378aca1
 # ╟─f2fbc3f0-8a51-43e6-8e15-15e2fa61124f
-# ╠═10209491-8d9f-4056-9358-09101e533dd5
 # ╟─91ce7b5d-cbcc-4cf5-8999-c2edd5e2bccf
 # ╟─d09b3c71-8049-4bf6-b00f-0c93e438ec51
 # ╟─76ba8fca-8425-4991-a04c-957c5748caa4
 # ╟─c746c416-e559-45a3-84be-f21ab256a5a3
 # ╟─5989cbc6-9e3e-46bf-9e70-8ea992629a9d
+# ╟─ee358a4b-5c94-4bd1-b2a2-3c9846abf38f
 # ╟─fdf8a09a-ff61-4f93-98eb-ceee6f99b1bc
 # ╟─2f830af9-8d21-4b25-add5-6842f0ca0ba5
+# ╟─2c03e491-a652-4548-afae-3384788c0b2b
+# ╟─aa27c4d0-161c-44af-a235-8cffd0e17393
+# ╟─21aebabf-c60f-444d-9d45-36df2ac3ab38
+# ╟─71539848-3b56-4d37-a25d-85c6feb3c9c9
 # ╟─a642d935-e0e4-4f89-ad12-083ab719f7dd
 # ╟─b3004e4f-0963-483d-b70e-b5ead79791b8
 # ╟─dcc5bb82-0418-4589-a036-073e23afbb1c
@@ -2236,16 +2371,26 @@ version = "1.4.1+0"
 # ╟─fe0a2c93-b0d1-4e47-b760-feeea03a7ace
 # ╟─c82a5807-ccba-41a7-b3c2-cd4e5bac0ecb
 # ╟─c5a2437e-c77f-4a04-84ce-cb73a682fac5
+# ╟─7ab52be5-fecd-440d-bd5d-60489ff10f3b
 # ╟─ab51bd5c-a3a4-40ce-a4b1-343d5d938f8c
 # ╟─393d4d88-da1a-4aba-bb82-ba1d3e8ec7a3
 # ╟─e2d9c02f-d7aa-4d3a-9a1d-2a0ef14d74ad
+# ╟─8dfaa441-de2e-47f4-869d-bf4471541b22
 # ╟─ecedd49b-e036-4c9a-94c4-a8e119309dc2
 # ╟─aa70bca1-61f0-4e60-937b-3b42a0b4d493
 # ╟─7c96056a-1d20-4f69-b7c9-9c49d250fce4
+# ╟─d146c7d9-94c3-4220-b2c3-7f9025a4c04d
 # ╟─e9855f2c-8fc8-40c4-997a-a60a6da3d22b
 # ╟─fa673ba6-677d-41b8-a60d-8519db356c61
 # ╟─d9a0a623-03f9-458d-ab99-fe8a0446ed3c
+# ╟─0ed17d30-ca8d-4ccc-bcd7-09c63cec38e0
+# ╟─d42743b8-7a16-4445-adfd-82809b1d9d58
+# ╟─63bb7260-a5b2-4206-9d5c-77684ecfdf36
+# ╟─b0f49879-df51-44b4-99a9-603f338ad884
+# ╟─95516f4e-53b1-43b8-b4a6-8457c6742ad9
+# ╟─2a0e2d1d-6e6e-4081-99bb-ca6eaf696399
 # ╟─d11bc08a-641d-426e-8999-805e93afc6ba
+# ╟─e81ca2e2-24f4-4f3c-aa0f-11a9ca9b00f1
 # ╟─02543f9e-0fb1-4f6d-8290-1a14e6fd4ecd
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
