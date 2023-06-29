@@ -82,12 +82,6 @@ $$r_0 = \frac{4g_0^2⟨n_p⟩\gamma_e}{(\gamma_e + \gamma_i)^2}$$
 
 """
 
-# ╔═╡ 01177799-1814-40da-ad12-05d5215642fd
-# ╠═╡ disabled = true
-#=╠═╡
-using PlutoUI
-  ╠═╡ =#
-
 # ╔═╡ 7920ef3e-d71e-45a5-8043-790dfb2022e7
 md"""### Analytical solution for time evolution and numerical comparison"""
 
