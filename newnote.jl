@@ -91,6 +91,12 @@ $$r_0 = \frac{4g_0^2⟨n_p⟩\gamma_e}{(\gamma_e + \gamma_i)^2}$$
 
 """
 
+# ╔═╡ 01177799-1814-40da-ad12-05d5215642fd
+# ╠═╡ disabled = true
+#=╠═╡
+using PlutoUI
+  ╠═╡ =#
+
 # ╔═╡ 7920ef3e-d71e-45a5-8043-790dfb2022e7
 md"""### Analytical solution for time evolution and numerical comparison"""
 
@@ -116,7 +122,7 @@ md"""
 md"""` Extrinsic loss rate γₑ | log₁₀(γₑ (MHz)) : `$(slγₑ = @bind log₁₀γₑ Slider(-4:0.05:4; default=2, show_value=true))"""
 
 # ╔═╡ ae46e64f-d968-472c-b92b-204faf27ae7c
-md"""` Time interval: [0 tᶠᶦⁿ] ( .1 µs) | log(tᶠᶦⁿ): `$(sllogtᶠᶦⁿ = @bind logtᶠᶦⁿ Slider(0:0.1:9; default=3, show_value=true))"""
+md"""` Time interval: [0 tᶠᶦⁿ] ( .1 µs) | log(tᶠᶦⁿ): `$(sllogtᶠᶦⁿ = @bind logtᶠᶦⁿ Slider(0:0.1:9; default=6, show_value=true))"""
 
 # ╔═╡ 1164cc37-2062-4ff9-8463-9edfb21db77a
 begin
@@ -220,13 +226,28 @@ Markdown.parse("""
 
 # ╔═╡ d09b3c71-8049-4bf6-b00f-0c93e438ec51
 begin
-	function analytical_components(t)
+	function analytical_components(t)	# time is in units of 1e-7 seconds
 		# imaginary of c1
 		c1vec = -exp.(-γₑ * MHz / 4 * (t / factor)) .* (g * kHz / (gᵖʳᶦᵐᵉ * MHz)) .* sinh.(gᵖʳᶦᵐᵉ * MHz * (t / factor))
 	
 		# realpart of c0
 		c0vec = exp.(-γₑ * MHz / 4 * (t / factor)) .* (
 			(γₑ * MHz / (4 * gᵖʳᶦᵐᵉ * MHz)) .* sinh.(gᵖʳᶦᵐᵉ * MHz * (t / factor)) .+ cosh.(gᵖʳᶦᵐᵉ * MHz * (t / factor)))
+	
+		c0vec = real(c0vec)
+		c1vec = real(c1vec)
+		return c0vec, c1vec
+	end
+
+	function analytical_components(dt, g) 
+		# dt is in units of 1e-7 seconds, g in kiloherz
+		gᵖʳᶦᵐᵉv = sqrt.(Complex.((γₑ)^2 / 16 .- (g / 1000).^2.)) # in MHz
+		# imaginary of c1
+		c1vec = -exp(-γₑ * MHz / 4 * (dt / factor)) * (g * kHz ./ (gᵖʳᶦᵐᵉv * MHz)) .* sinh.(gᵖʳᶦᵐᵉ * MHz * (dt / factor))
+	
+		# realpart of c0
+		c0vec = exp.(-γₑ * MHz / 4 * (dt / factor)) * (
+			(γₑ * MHz ./ (4 * gᵖʳᶦᵐᵉv * MHz)) .* sinh.(gᵖʳᶦᵐᵉv * MHz * (dt / factor)) .+ cosh.(gᵖʳᶦᵐᵉ * MHz * (dt / factor)))
 	
 		c0vec = real(c0vec)
 		c1vec = real(c1vec)
@@ -368,8 +389,7 @@ md"""### Heralding the generation of distributed microwave Bell pairs
 If we use the same coherent pump to drive two separate copies of this system and erase the which-path information using a beam splitter, we will herald the generation of the distributed microwave Bell pair $|01\rangle \pm |10\rangle$
 in the following steps
 - The blue-detuned pump will create pairs of microwave/optical photons.
-- By detection of the optical photons after erasing the path inforation we can herald entanglement between the microwave oscillators.
-- This is a high-fidelity, low-efficiency probabilistic operation.
+- By detection of the optical photons after erasing the path information (for example witha beam splitter) we can herald entanglement between the microwave oscillators (this is a high-fidelity, low-efficiency probabilistic operation)
 
 However, if the nodes have different interaction rates $g$ and couplings $\gamma_e$, the Bell pair would not be pure, hence the **infidelity**:
 
@@ -423,7 +443,7 @@ Below we plot the entanglement rate $r_e$ with respect to the power of and the n
 md""""""
 
 # ╔═╡ c5a2437e-c77f-4a04-84ce-cb73a682fac5
-md"""` Pump pulse duration: ∆t (.1µs)  : `$(@bind dtµs Slider(1:0.01:100; default=1, show_value=true))"""
+md"""` Pump pulse duration: ∆t (.1µs)  : `$(sldtµs = @bind dtµs Slider(1:0.01:10; default=1, show_value=true))"""
 
 # ╔═╡ 7ab52be5-fecd-440d-bd5d-60489ff10f3b
 md"""` Extrinsic loss rate γₑ | log₁₀(γₑ (MHz)) : `$slγₑ"""
@@ -435,7 +455,7 @@ md"""`The single-photon nonlinear interaction rate log₁₀(g₀ (kHz))` : $slg
 md"""` γᵢ/γₑ : `$(@bind γᵢfγₑ Slider(0:0.01:1; default=1, show_value=true))"""
 
 # ╔═╡ 393d4d88-da1a-4aba-bb82-ba1d3e8ec7a3
-md"""`Logarithmic y(entanglement rate) axis logʳᵃᵗᵉ : `$(@bind logʳᵃᵗᵉ CheckBox(default=true))"""
+md"""`Logarithmic y(entanglement rate) axis logʳᵃᵗᵉ : `$(sllogʳᵃᵗᵉ = @bind logʳᵃᵗᵉ CheckBox(default=true))"""
 
 # ╔═╡ e2d9c02f-d7aa-4d3a-9a1d-2a0ef14d74ad
 md"""`Guide : `$(@bind guide CheckBox(default=false))"""
@@ -487,7 +507,7 @@ end
 # ╔═╡ aa70bca1-61f0-4e60-937b-3b42a0b4d493
 begin
 	γᵢ = γᵢfγₑ * γₑ
-	if g₀ < 10
+	if g₀ < 200
 		lognₚspan = 6:0.1:9.5
 	elseif g₀ < 1e4
 		lognₚspan = 0:0.1:9.5
@@ -502,7 +522,7 @@ begin
 	pspan = 10 .^ logpspan
 	
 	scalingfactor 	= 16 * ((γₑ * MHz) / (γₑ * MHz + γₑ * MHz)^2)^2
-	dt 			  	= dtµs * 1e-7
+	dt 			  	= dtµs * 1e-7 # dt is in seconds
 	tr 				= 1e-6
 	
 	revec     = entanglement_rate(lognₚspan, γₑ, γᵢ, g₀, dt, tr; logy=logʳᵃᵗᵉ)
@@ -517,10 +537,10 @@ begin
 
 	
 	plotnp = plot(title="Entanglement Rate (Hz)")
+
 	if guide
 		plot!(nₚspan, revecmax, label="\$r_e\$ (γₑ = γᵢ)", c=2)
 		plot!(nₚspan, revec0, label="\$r_e\$ (γᵢ = 0)", c=2, ls=:dash)
-
 	end
 	plot!(nₚspan, revec, label="\$r_e\$ [1 click event]", c=1)
 	plot!(nₚspan, revecmany .+ revec, xaxis="nb of photons in the pump mode", label="\$r_e\$ [1 or 2 click events]", c=1, ls=:dash)
@@ -534,7 +554,7 @@ begin
 
 	
 	if (logʳᵃᵗᵉ == true)
-		plot(plotnp, plotpower, layout = grid(2, 1, heights=[0.5, 0.5]), xscale=:log10) # TODO: find way to use yscale=:log10 without it crashing. cutoff unimportant examples (y < 1 => cut)
+		plot(plotnp, plotpower, layout = grid(2, 1, heights=[0.5, 0.5]), xscale=:log10, ylimits=(-6,maximum(revecmax))) # TODO: find way to use yscale=:log10 without it crashing. cutoff unimportant examples (y < 1 => cut)
 	else
 		plot(plotnp, plotpower, layout = grid(2, 1, heights=[0.5, 0.5]), xscale=:log10)
 	end
@@ -549,7 +569,9 @@ Click the eye icon to the left to see or modify the code the plots the following
 # ╔═╡ d146c7d9-94c3-4220-b2c3-7f9025a4c04d
 md"""Remember that a click event heralds the creation of single photon in the microwave mode.
 
-As we can see, keeping the ratio between the intrinsic and extrinsic loss rates equal to 1, the entanglement rate scales as $\gamma_e^{-2}$. So we can see that as $\gamma_e$ gets smaller, i.e. we begin to break our regime, the **entanglement rate increases**, however, as we will see in the following section, the **fidelity of the generated bell pairs gets smaller**. We need to find the balance between the two!
+As we can see, keeping the ratio between the intrinsic and extrinsic loss rates equal to 1, the entanglement rate scales as $\gamma_e^{-2}$. 
+
+So we can see that **as $\gamma_e$ gets smaller**, i.e. we begin to break our regime, the **entanglement rate increases**, however, as we will see in the following section, the **fidelity of the generated bell pairs gets smaller**. We need to find the balance between the two!
 
 Also given that the ratio of photons that actually reach the photodetector is equal to $\frac{\gamma_e}{\gamma_e + \gamma_i} = 0.5$, we miss half of the heralding events when the maximal entanglement rate is reached ($\gamma_e = \gamma_i$). 
 
@@ -557,6 +579,57 @@ Due to missing half of the healding events we need to reset the microwave cavity
 
 # ╔═╡ 33571876-74b4-4a39-a541-f777880d7fce
 md"""Typical hardware parameters of state-of-the-art devices ($γ_e = γ_i = 100MHz$   and $g_0 = 1kHz$) will allow pair generation rates of $100kHz$ at fidelities of $0.99$, while suffering $0.1mW$ of in-fridge heating due to leakage from the pump."""
+
+# ╔═╡ a5f936fb-9866-46ce-9c60-0ab21a67c961
+md"""### Visualizing entanglement infidelity"""
+
+# ╔═╡ 4136d7c6-3eda-4a80-9a44-8b57e7088b1c
+md"""Below we plot the entanglement infidelity of $|\psi\rangle$, calculated as $1-\langle\psi|\rho|\psi\rangle$, where $\rho = |A\rangle\langle A|$ and $|A\rangle \sim |00\rangle + |11\rangle$ w.r.t the number of photons in pump mode $\hat{p}$.
+
+*TODO: check if plot is actually ok:) (the infidelity should be smaller)*"""
+
+# ╔═╡ 9b86f97f-8645-4074-9370-1ea4d204cb33
+md"""` Pump pulse duration: ∆t (.1µs)  : `$sldtµs"""
+
+# ╔═╡ 9795091c-77b8-416d-8b58-adc0686dd4e6
+md"""` Extrinsic loss rate γₑ | log₁₀(γₑ (MHz)) : `$slγₑ"""
+
+# ╔═╡ b20c1921-9935-4013-b74e-830db0f82023
+md"""`Logarithmic y(entanglement rate) axis logʳᵃᵗᵉ : `$sllogʳᵃᵗᵉ"""
+
+# ╔═╡ fedf62db-d9f0-4edf-904e-bb14885ac80b
+Markdown.parse("""
+|g / γₑ            | Comments 				   |
+|:-----------------|:--------------------------|
+|`$(g * kHz / (γₑ * MHz))`      | `$(get_regime(g, γₑ))`    |
+""")
+
+# ╔═╡ 9b170d18-9d9f-4863-b98b-4e8a8c6b836d
+begin
+	# real part of c0 and imaginary of c1
+	c0dtr, c1dtr = analytical_components((dt + tr) * factor, real(g₀ * sqrt.(nₚspan)))
+	c0dt, c1dt = analytical_components((dt + 0) * factor, real(g₀ * sqrt.(nₚspan)))
+
+	## Trying to plot the infidelity vs pump photons
+	infidelity1 = 1 .- 1 * (c0dt.^ 2 .+ c1dt.^ 2)  # no reset time included
+	infidelity1r = 1 .- 1 * (c0dtr.^ 2 .+ c1dtr.^ 2) # with reset time included
+
+	plotinfidelities = plot(title="Infidelitiy vs nb of photons in p", xaxis="nb of photons in the pump mode")
+	plot!(nₚspan, infidelity1 , label="Infidelity? (\$t_r = 0\$)")
+	plot!(nₚspan, infidelity1r , label="Infidelity?")
+
+	
+	if (logʳᵃᵗᵉ == true)
+		plot(plotinfidelities, xscale=:log10, yscale=:log10, ylimits=(1e-4,1))
+	else
+		plot(plotinfidelities, xscale=:log10)
+	end
+end
+
+# ╔═╡ 8d76397d-7d0b-4fc3-9990-da676c5ae22b
+md"""As predicted before, when keeping g constant, bigger extrinsic loss rates result in smaller infidelities $\implies$ bigger fidelities. 
+
+Subsequently, smaller extrinsic loss rates correspond to smaller fidelities."""
 
 # ╔═╡ e9855f2c-8fc8-40c4-997a-a60a6da3d22b
 md"""
@@ -651,6 +724,25 @@ We obtain a microwave entangled pair $|00\rangle \pm |11\rangle$
 
 We obtain a microwave entangled pair $|01\rangle \pm |10\rangle$
 """
+
+# ╔═╡ c6d24b06-f1aa-4733-969c-a153aae99257
+md"""### Purification
+
+The state generated by our heralding process in the case of the **blue-detuned** pump would not be a pure entangled state. Rather, it would be of the form:
+
+$$\rho = (1-\epsilon)|A\rangle\langle A| + \epsilon|B\rangle\langle B| + \epsilon|C\rangle\langle C|,$$
+$$|A\rangle = |01\rangle \pm |10\rangle$$
+$$|B\rangle = |00\rangle + |11\rangle$$
+$$|C\rangle = |00\rangle - |11\rangle,$$
+where
+-  $|A⟩$ is one of the two possible desired entangled states (in our case $|01\rangle \pm |10\rangle$)
+-  $\epsilon$ is a measure of the infidelity
+
+Through simple single-stage purification performed on the microwave superconducting quantum computer the infidelity $\epsilon$ can be lowered by an order of magnitude while incurring a decrease in the rate of just over a factor of two. 
+
+The purification circuit consists of these steps:
+- from the generated photons, only half will be purified, while half are used for the porcess of purification (due to the sacrifice, the effective rate is halved)
+- a bilateral CNOT operation between the pair to be purified and a sacrificial pair followed by a Bell measurement on the sacrificial pair"""
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -2397,6 +2489,14 @@ version = "1.4.1+0"
 # ╟─7c96056a-1d20-4f69-b7c9-9c49d250fce4
 # ╟─d146c7d9-94c3-4220-b2c3-7f9025a4c04d
 # ╟─33571876-74b4-4a39-a541-f777880d7fce
+# ╟─a5f936fb-9866-46ce-9c60-0ab21a67c961
+# ╟─4136d7c6-3eda-4a80-9a44-8b57e7088b1c
+# ╟─9b86f97f-8645-4074-9370-1ea4d204cb33
+# ╟─9795091c-77b8-416d-8b58-adc0686dd4e6
+# ╟─b20c1921-9935-4013-b74e-830db0f82023
+# ╟─fedf62db-d9f0-4edf-904e-bb14885ac80b
+# ╟─9b170d18-9d9f-4863-b98b-4e8a8c6b836d
+# ╟─8d76397d-7d0b-4fc3-9990-da676c5ae22b
 # ╟─e9855f2c-8fc8-40c4-997a-a60a6da3d22b
 # ╟─fa673ba6-677d-41b8-a60d-8519db356c61
 # ╟─d9a0a623-03f9-458d-ab99-fe8a0446ed3c
@@ -2409,5 +2509,6 @@ version = "1.4.1+0"
 # ╟─d11bc08a-641d-426e-8999-805e93afc6ba
 # ╟─e81ca2e2-24f4-4f3c-aa0f-11a9ca9b00f1
 # ╟─02543f9e-0fb1-4f6d-8290-1a14e6fd4ecd
+# ╟─c6d24b06-f1aa-4733-969c-a153aae99257
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
