@@ -55,6 +55,10 @@ $$⟨n_p⟩ = \frac{4\gamma_e}{(\gamma_e + \gamma_i)^2} \frac{P}{\hbar \omega}$$
 
 - and $\hat{c} = \sqrt{\gamma_e}\hat{a}$ is the collapse operator that describes the detection of the optical photon
 
+"""
+
+# ╔═╡ f1f6c0f6-8281-4ab5-b2b8-b0f1ba3c26e5
+md"""### Assumptions and notations
 
 Assumptions:
 1. the intrinsic loss rate $\gamma_i$ is negligible (non-zero $γ_i$ will reduce the detection effiiency but not the fidelity)
@@ -64,7 +68,6 @@ Assumptions:
 Notations:
 
 - denote a Fock state with $n_a$ photons in optical mode $\hat{a}$ and $n_b$ in microwave mode $\hat{b}$ as $|n_an_b\rangle$
-
 """
 
 # ╔═╡ 45929b93-3ce5-4db3-a22a-423a28c8f32d
@@ -87,12 +90,6 @@ The rate of obtaining a $|11\rangle$ pair on which we can herald the single micr
 $$r_0 = \frac{4g_0^2⟨n_p⟩\gamma_e}{(\gamma_e + \gamma_i)^2}$$
 
 """
-
-# ╔═╡ 01177799-1814-40da-ad12-05d5215642fd
-# ╠═╡ disabled = true
-#=╠═╡
-using PlutoUI
-  ╠═╡ =#
 
 # ╔═╡ 7920ef3e-d71e-45a5-8043-790dfb2022e7
 md"""### Analytical solution for time evolution and numerical comparison"""
@@ -409,7 +406,7 @@ md""""""
 
 # ╔═╡ fe0a2c93-b0d1-4e47-b760-feeea03a7ace
 md"""
-### Visualizing the entanglement rate in time
+### Visualizing the entanglement rate vs pump mode power
 
 In order to express the entanglement rate $r_e$ (Bell pairs generation rate) with respect to $P$, the power of the pump mode $\hat{p}$, we need to rewrite a few of the afforementioned formulas:
 
@@ -569,7 +566,7 @@ TODO: plot other lines from paper (with purification and in-fridge heating) and 
 # ╔═╡ fa673ba6-677d-41b8-a60d-8519db356c61
 md"""
 ## Reviewing assumptions made and regimes in which they break
-Under our initial assumptions:
+Under our [initial assumptions](#f1f6c0f6-8281-4ab5-b2b8-b0f1ba3c26e5):
 - an internal loss rate $\gamma_i$ reduces the entanglement generation rate by a factor of $\frac{\gamma_e}{\gamma_e + \gamma_i}$
 - an internal loss rate $\gamma_i$ does **NOT** affect the fidelity of the obtained bell pairs (see [2])
 - the fidelity remains unchanged by insertion loss in the optical network [3]
@@ -2350,6 +2347,7 @@ version = "1.4.1+0"
 # ╔═╡ Cell order:
 # ╟─970718ad-b2a6-4285-899e-ed29ffc8dc85
 # ╟─4eb251c5-2323-4185-8320-d33316cbf047
+# ╟─f1f6c0f6-8281-4ab5-b2b8-b0f1ba3c26e5
 # ╟─45929b93-3ce5-4db3-a22a-423a28c8f32d
 # ╟─01177799-1814-40da-ad12-05d5215642fd
 # ╟─7920ef3e-d71e-45a5-8043-790dfb2022e7
