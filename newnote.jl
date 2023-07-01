@@ -744,6 +744,11 @@ The purification circuit consists of these steps:
 - from the generated photons, only half will be purified, while half are used for the porcess of purification (due to the sacrifice, the effective rate is halved)
 - a bilateral CNOT operation between the pair to be purified and a sacrificial pair followed by a Bell measurement on the sacrificial pair"""
 
+# ╔═╡ 36ad9694-e8b3-4c37-b4e2-30e94556ebdb
+md"""This distillation procedure assumes access to perfect multi-qubit gates and measurements. Its yield is obtained through the entanglement entropy of the available states, namely
+
+$$yield = 1 − S(\epsilon) = 1 − (1 − \epsilon) log(1 − \epsilon) − 2\epsilon log(\epsilon).$$"""
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -2510,5 +2515,6 @@ version = "1.4.1+0"
 # ╟─e81ca2e2-24f4-4f3c-aa0f-11a9ca9b00f1
 # ╟─02543f9e-0fb1-4f6d-8290-1a14e6fd4ecd
 # ╟─c6d24b06-f1aa-4733-969c-a153aae99257
+# ╟─36ad9694-e8b3-4c37-b4e2-30e94556ebdb
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
