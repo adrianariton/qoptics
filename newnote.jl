@@ -389,7 +389,7 @@ md"""### Heralding the generation of distributed microwave Bell pairs
 If we use the same coherent pump to drive two separate copies of this system and erase the which-path information using a beam splitter, we will herald the generation of the distributed microwave Bell pair $|01\rangle \pm |10\rangle$
 in the following steps
 - The blue-detuned pump will create pairs of microwave/optical photons.
-- By detection of the optical photons after erasing the path information (for example witha beam splitter) we can herald entanglement between the microwave oscillators (this is a high-fidelity, low-efficiency probabilistic operation)
+- By detection of the optical photons after erasing the path information (for example with a beam splitter) we can herald entanglement between the microwave oscillators (this is a high-fidelity, low-efficiency probabilistic operation)
 
 However, if the nodes have different interaction rates $g$ and couplings $\gamma_e$, the Bell pair would not be pure, hence the **infidelity**:
 
@@ -439,6 +439,9 @@ As one notices from the final formula $[*]$, the entanglement rate scales as $\f
 Below we plot the entanglement rate $r_e$ with respect to the power of and the number of photons in the pump mode $\hat{p}$. One can vizualize the entanglement rate when $\gamma_e = \gamma_i$ (maximum entanglement rate), as well as when there is no intrinsic loss rate ($\gamma_i = 0$) by toggling the `Guides` option.
 """
 
+# ╔═╡ ff33d221-ed21-4f84-83a9-83319f05b375
+md"""We also plot the entanglement rate after  [purification](#c6d24b06-f1aa-4733-969c-a153aae99257), which is descussed in the later sections."""
+
 # ╔═╡ c82a5807-ccba-41a7-b3c2-cd4e5bac0ecb
 md""""""
 
@@ -452,7 +455,7 @@ md"""` Extrinsic loss rate γₑ | log₁₀(γₑ (MHz)) : `$slγₑ"""
 md"""`The single-photon nonlinear interaction rate log₁₀(g₀ (kHz))` : $slg """
 
 # ╔═╡ ab51bd5c-a3a4-40ce-a4b1-343d5d938f8c
-md"""` γᵢ/γₑ : `$(@bind γᵢfγₑ Slider(0:0.01:1; default=1, show_value=true))"""
+md"""` γᵢ/γₑ : `$(slγᵢfγₑ = @bind γᵢfγₑ Slider(0:0.01:1; default=1, show_value=true))"""
 
 # ╔═╡ 393d4d88-da1a-4aba-bb82-ba1d3e8ec7a3
 md"""`Logarithmic y(entanglement rate) axis logʳᵃᵗᵉ : `$(sllogʳᵃᵗᵉ = @bind logʳᵃᵗᵉ CheckBox(default=true))"""
@@ -477,7 +480,7 @@ Markdown.parse("""
 
 # ╔═╡ ecedd49b-e036-4c9a-94c4-a8e119309dc2
 begin
-	function entanglement_rate(log_range, γₑ, γᵢ, g₀, dt, tr; power=false, moreevents=false, logy=false)
+	function entanglement_rate(log_range, γₑ, γᵢ, g₀, dt, tr; power=false, moreevents=false, logy=false, purification=false)
 		if power ==false
 			r0vec = 4 * (g₀ * kHz)^2 * (10 .^ log_range) * (γₑ * MHz) / (γₑ * MHz + γᵢ * MHz)^2
 		else
@@ -490,6 +493,10 @@ begin
 			revec = 2 * r0vec .* exp.(- r0vec * dt) * dt / (dt + tr)
 		else
 			revec = 2 * r0vec .^ 2 .* exp.(- r0vec * dt) * dt ^ 2 / 2 / (dt + tr) 
+		end
+
+		if purification
+			revec=  revec / 2
 		end
 
 		if logy
@@ -528,7 +535,9 @@ begin
 	revec     = entanglement_rate(lognₚspan, γₑ, γᵢ, g₀, dt, tr; logy=logʳᵃᵗᵉ)
 	revecmax  = entanglement_rate(lognₚspan, γₑ, γₑ, g₀, dt, tr; logy=logʳᵃᵗᵉ)
 	revec0    =	entanglement_rate(lognₚspan, γₑ, 0 , g₀, dt, tr; logy=logʳᵃᵗᵉ)
-	
+		
+	revec_pure= entanglement_rate(lognₚspan, γₑ, γᵢ, g₀, dt, tr; logy=logʳᵃᵗᵉ, purification=true)
+
 	revecp    =	entanglement_rate(lognₚspan, γₑ, γᵢ, g₀, dt, tr; power=true, logy=logʳᵃᵗᵉ)
 	revecpmax = entanglement_rate(lognₚspan, γₑ, γₑ, g₀, dt, tr; power=true, logy=logʳᵃᵗᵉ)
 	revecp0   =	entanglement_rate(lognₚspan, γₑ, 0 , g₀, dt, tr; power=true, logy=logʳᵃᵗᵉ)
@@ -536,27 +545,33 @@ begin
 	revecmany = entanglement_rate(lognₚspan, γₑ, 0 , g₀, dt, tr; moreevents=true, logy=logʳᵃᵗᵉ)
 
 	
-	plotnp = plot(title="Entanglement Rate (Hz)")
+	plotnp = plot(title="Entanglement Rate (Hz)",legend=:bottomleft)
 
 	if guide
 		plot!(nₚspan, revecmax, label="\$r_e\$ (γₑ = γᵢ)", c=2)
 		plot!(nₚspan, revec0, label="\$r_e\$ (γᵢ = 0)", c=2, ls=:dash)
 	end
+
 	plot!(nₚspan, revec, label="\$r_e\$ [1 click event]", c=1)
 	plot!(nₚspan, revecmany .+ revec, xaxis="nb of photons in the pump mode", label="\$r_e\$ [1 or 2 click events]", c=1, ls=:dash)
+	plot!(nₚspan, revec_pure, label="\$r_e\$ (+ purification)", c=3, ls=:dashdot)
 	
-	plotpower = plot(legend=:none)
-	if guide
-		plot!(pspan, revecpmax, label="\$r_e\$ (γₑ = γᵢ)", c=2)
-		plot!(pspan, revecp0, label="\$r_e\$ (γᵢ = 0)", c=2, ls=:dash)
-	end
-	plot!(pspan, revecp, xaxis="Power / \$\\hbar\\omega\$", label="\$r_e\$", c=1)
+	plotpower = plot(legend=:none, yaxis=false, xaxis="Power / \$\\hbar\\omega\$")
+	plot!(pspan, pspan * 0, color=:black)
+	#if guide
+	#	plot!(pspan, revecpmax, label="\$r_e\$ (γₑ = γᵢ)", c=2)
+	#	plot!(pspan, revecp0, label="\$r_e\$ (γᵢ = 0)", c=2, ls=:dash)		
+
+	#end
+
+	# plot!(pspan, revecp, xaxis="Power / \$\\hbar\\omega\$", label="\$r_e\$", c=1)
+	# plot!(pspan, revecp, label="\$r_e\$ (+ purification)", c=3, ls=:dashdot)
 
 	
 	if (logʳᵃᵗᵉ == true)
-		plot(plotnp, plotpower, layout = grid(2, 1, heights=[0.5, 0.5]), xscale=:log10, ylimits=(-6,maximum(revecmax))) # TODO: find way to use yscale=:log10 without it crashing. cutoff unimportant examples (y < 1 => cut)
+		plot(plotnp, plotpower, layout = grid(2, 1, heights=[0.99, 0.01]), xscale=:log10, ylimits=(0,maximum(revecmax))) # TODO: find way to use yscale=:log10 without it crashing. cutoff unimportant examples (y < 1 => cut)
 	else
-		plot(plotnp, plotpower, layout = grid(2, 1, heights=[0.5, 0.5]), xscale=:log10)
+		plot(plotnp, plotpower, layout = grid(2, 1, heights=[0.99, 0.01]), xscale=:log10)
 	end
 end
 
@@ -580,11 +595,14 @@ Due to missing half of the healding events we need to reset the microwave cavity
 # ╔═╡ 33571876-74b4-4a39-a541-f777880d7fce
 md"""Typical hardware parameters of state-of-the-art devices ($γ_e = γ_i = 100MHz$   and $g_0 = 1kHz$) will allow pair generation rates of $100kHz$ at fidelities of $0.99$, while suffering $0.1mW$ of in-fridge heating due to leakage from the pump."""
 
+# ╔═╡ 1d2966c0-9e43-44b7-af69-d355717d7353
+md"""Through [purification](#c6d24b06-f1aa-4733-969c-a153aae99257), the entanglement rate is halved (green dash-dot line) to increase fidelity, as we will see in the [next sections](#c6d24b06-f1aa-4733-969c-a153aae99257)"""
+
 # ╔═╡ a5f936fb-9866-46ce-9c60-0ab21a67c961
 md"""### Visualizing entanglement infidelity"""
 
 # ╔═╡ 4136d7c6-3eda-4a80-9a44-8b57e7088b1c
-md"""Below we plot the entanglement infidelity of $|\psi\rangle$, calculated as $1-\langle\psi|\rho|\psi\rangle$, where $\rho = |A\rangle\langle A|$ and $|A\rangle \sim |00\rangle + |11\rangle$ w.r.t the number of photons in pump mode $\hat{p}$.
+md"""Below we plot the entanglement infidelity of $|\psi\rangle$, calculated as $1-\langle\psi|\rho|\psi\rangle$ at time $∆t$, where $\rho = |A\rangle\langle A|$ and $|A\rangle \sim |00\rangle + |11\rangle$ w.r.t the number of photons in pump mode $\hat{p}$.
 
 *TODO: check if plot is actually ok:) (the infidelity should be smaller)*"""
 
@@ -593,6 +611,9 @@ md"""` Pump pulse duration: ∆t (.1µs)  : `$sldtµs"""
 
 # ╔═╡ 9795091c-77b8-416d-8b58-adc0686dd4e6
 md"""` Extrinsic loss rate γₑ | log₁₀(γₑ (MHz)) : `$slγₑ"""
+
+# ╔═╡ b5747e4f-a300-4705-80f7-2e5ec1184041
+md"""` γᵢ/γₑ : `$slγᵢfγₑ"""
 
 # ╔═╡ b20c1921-9935-4013-b74e-830db0f82023
 md"""`Logarithmic y(entanglement rate) axis logʳᵃᵗᵉ : `$sllogʳᵃᵗᵉ"""
@@ -614,7 +635,7 @@ begin
 	infidelity1 = 1 .- 1 * (c0dt.^ 2 .+ c1dt.^ 2)  # no reset time included
 	infidelity1r = 1 .- 1 * (c0dtr.^ 2 .+ c1dtr.^ 2) # with reset time included
 
-	plotinfidelities = plot(title="Infidelitiy vs nb of photons in p", xaxis="nb of photons in the pump mode")
+	plotinfidelities = plot(title="Infidelitiy vs nb of photons in p", xaxis="nb of photons in the pump mode", legend=:bottomright)
 	plot!(nₚspan, infidelity1 , label="Infidelity? (\$t_r = 0\$)")
 	plot!(nₚspan, infidelity1r , label="Infidelity?")
 
@@ -630,6 +651,11 @@ end
 md"""As predicted before, when keeping g constant, bigger extrinsic loss rates result in smaller infidelities $\implies$ bigger fidelities. 
 
 Subsequently, smaller extrinsic loss rates correspond to smaller fidelities."""
+
+# ╔═╡ 7082e2a0-486f-4803-89e2-409e91cb5a1a
+md"""
+Notice that the fidelity remains unaffected by an intrinsic loss rate $\gamma_i$
+"""
 
 # ╔═╡ e9855f2c-8fc8-40c4-997a-a60a6da3d22b
 md"""
@@ -2480,6 +2506,7 @@ version = "1.4.1+0"
 # ╟─ef75728f-0b9f-41ce-9b36-1689952858be
 # ╟─e008a26b-f4b2-4106-b982-69bc34af0c4e
 # ╟─fe0a2c93-b0d1-4e47-b760-feeea03a7ace
+# ╟─ff33d221-ed21-4f84-83a9-83319f05b375
 # ╟─c82a5807-ccba-41a7-b3c2-cd4e5bac0ecb
 # ╟─c5a2437e-c77f-4a04-84ce-cb73a682fac5
 # ╟─7ab52be5-fecd-440d-bd5d-60489ff10f3b
@@ -2494,14 +2521,17 @@ version = "1.4.1+0"
 # ╟─7c96056a-1d20-4f69-b7c9-9c49d250fce4
 # ╟─d146c7d9-94c3-4220-b2c3-7f9025a4c04d
 # ╟─33571876-74b4-4a39-a541-f777880d7fce
+# ╟─1d2966c0-9e43-44b7-af69-d355717d7353
 # ╟─a5f936fb-9866-46ce-9c60-0ab21a67c961
 # ╟─4136d7c6-3eda-4a80-9a44-8b57e7088b1c
 # ╟─9b86f97f-8645-4074-9370-1ea4d204cb33
 # ╟─9795091c-77b8-416d-8b58-adc0686dd4e6
+# ╟─b5747e4f-a300-4705-80f7-2e5ec1184041
 # ╟─b20c1921-9935-4013-b74e-830db0f82023
 # ╟─fedf62db-d9f0-4edf-904e-bb14885ac80b
 # ╟─9b170d18-9d9f-4863-b98b-4e8a8c6b836d
 # ╟─8d76397d-7d0b-4fc3-9990-da676c5ae22b
+# ╟─7082e2a0-486f-4803-89e2-409e91cb5a1a
 # ╟─e9855f2c-8fc8-40c4-997a-a60a6da3d22b
 # ╟─fa673ba6-677d-41b8-a60d-8519db356c61
 # ╟─d9a0a623-03f9-458d-ab99-fe8a0446ed3c
