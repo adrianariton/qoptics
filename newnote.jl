@@ -26,7 +26,7 @@ md"""
 
 *Supplementary to "Optically-Heralded Entanglement of Superconducting Systems in Quantum Networks" by Stefan Krastanov, Hamza Raniwala, Jeffrey Holzgrafe, Kurt Jacobs, Marko Lončar, Matthew J. Reagor, and Dirk R. Englund 2021, and adapted into a notebook by Adrian Ariton and Alexandru Ariton*
 
-> This notebook explains the tradeoffs between the number of generated entangled particles and their accuracy. It aims to find an equilibrium between these two, by proposing optical networking via heralding end-to-end entanglement with one detected photon and teleporrtation. This approach offers advantages over traditional methods by leveraging heralding and teleportation, which can overcome limitations associated with low microwave-optical coupling efficiency and added noise. 
+> This notebook explains the tradeoffs between the number of generated entangled Bell pairs and their fidelity. It aims to find an equilibrium between these two, by proposing optical networking via heralding end-to-end entanglement with one detected photon and teleporrtation. This approach offers advantages over traditional methods by leveraging heralding and teleportation, which can overcome limitations associated with low microwave-optical coupling efficiency and added noise. 
 
 The paper this notebook is based on shows that today’s transduction hardware can run the heralding scheme that will be discussed while providing orders of magnitude improvement in the networking fidelity compared to the typical deterministic transduction.
 
@@ -115,20 +115,11 @@ md"""`The single-photon nonlinear interaction rate log₁₀(g₀ (kHz)) : `$(sl
 
 # ╔═╡ ff17c447-bb69-4455-8819-6fa625addc7a
 md"""
-`Particle number (logarithmic) log₁₀(nₚ) : `$(slnₚ = @bind log₁₀nₚ Slider(0:0.5:7; default=2, show_value=true))
+`Number of photons in the pump mode (logarithmic) log₁₀(nₚ) : `$(slnₚ = @bind log₁₀nₚ Slider(0:0.5:10; default=6, show_value=true))
 """
 
 # ╔═╡ 387227e3-e4d9-4453-8845-b3c730999763
 md"""` Extrinsic loss rate γₑ | log₁₀(γₑ (MHz)) : `$(slγₑ = @bind log₁₀γₑ Slider(-4:0.05:4; default=2, show_value=true))"""
-
-# ╔═╡ ae46e64f-d968-472c-b92b-204faf27ae7c
-md"""` Time interval: [0 tᶠᶦⁿ] ( .1 µs) | log(tᶠᶦⁿ): `$(sllogtᶠᶦⁿ = @bind logtᶠᶦⁿ Slider(0:0.1:9; default=6, show_value=true))"""
-
-# ╔═╡ 1164cc37-2062-4ff9-8463-9edfb21db77a
-begin
-tᶠᶦⁿ = 10 ^ logtᶠᶦⁿ # time interval in .1 microseconds
-md"""`The time interval above will be used for all the graphs below`"""
-end
 
 # ╔═╡ bf31c280-5e88-42d0-85bb-3ab11378aca1
 begin
@@ -145,20 +136,26 @@ begin
 	md"""`Deduced parameters:`"""
 end
 
+# ╔═╡ 1164cc37-2062-4ff9-8463-9edfb21db77a
+begin
+tᶠᶦⁿ = 20 / γₑ # time interval in microseconds
+md"""`The time interval above will be used for all the graphs below`"""
+end
+
 # ╔═╡ 10209491-8d9f-4056-9358-09101e533dd5
 begin
 	using DifferentialEquations
 	MHz = 1e6
 	kHz = 1e3
 	MkHz = 1e3
-	factor = 1e7 	# time is ploted in units of .1 microseconds
+	factor = 1e6 	# time is ploted in units of 1 microseconds
 
 	H = [0 g*kHz/factor
 		 conj(g * kHz)/factor  -im * γₑ * MHz/(2.0)/factor] # H in Hz
 	
 	f(ψ, p, t) = -im * H * ψ
 
-	# Cauchy problem condition: fock state at t=0
+	# Initial condition: fock state at t=0
 	ψ0 = [1.0 + 0.0im
 		0.0 + 0.0im]
 	
@@ -167,9 +164,7 @@ begin
 
 	# c_0 and c_1 are extracted from sol
 	sol = solve(schrodinger; dt=1e-8)
-
-	md""""""
-end
+end;
 
 # ╔═╡ cdf312f8-2ed1-49f0-9b85-d3ad58b31ec7
 begin
@@ -206,65 +201,62 @@ begin
 		c0ᵢₘ[i] = imag(sol.u[i][1])
 		c1ᵢₘ[i] = imag(sol.u[i][2])
 
-		c0ᵃᵇˢ[i] = abs(sol.u[i][2])
+		c0ᵃᵇˢ[i] = abs(sol.u[i][1])
 		c1ᵃᵇˢ[i] = abs(sol.u[i][2])
 	end
 
 	# plot(sol.t,  c0ᵣₑₐₗ, linewidth=3, ls=:dash, label = "\$real(c_0)\$")
 	# plot(sol.t,  c0ᵣₑₐₗ, linewidth=3, ls=:dash, label = "\$real(c_0)\$")
-	md""""""
 	
-end
+	
+end;
 
 # ╔═╡ f2fbc3f0-8a51-43e6-8e15-15e2fa61124f
 Markdown.parse("""
-|g             | nₚ    | gᵖʳᶦᵐᵉ            |tᶠᶦⁿ      |γₑ       |
+|g             | nₚ    | gᵖʳᶦᵐᵉ            |time interval      |γₑ       |
 |:-------------|:------|:------------------|:---------|:--------|
-|`$g` kHz      | `$nₚ` | `$gᵖʳᶦᵐᵉ` MHz     | `$(tᶠᶦⁿ/10)` µs |`$γₑ` MHz|
+|`$g` kHz      | `$nₚ` | `$gᵖʳᶦᵐᵉ` MHz     | `[0, $(tᶠᶦⁿ)]` µs |`$γₑ` MHz|
 """)
 
 
 # ╔═╡ d09b3c71-8049-4bf6-b00f-0c93e438ec51
 begin
-	function analytical_components(t)	# time is in units of 1e-7 seconds
-		# imaginary of c1
-		c1vec = -exp.(-γₑ * MHz / 4 * (t / factor)) .* (g * kHz / (gᵖʳᶦᵐᵉ * MHz)) .* sinh.(gᵖʳᶦᵐᵉ * MHz * (t / factor))
+	function analytical_components(t)	# t is in units of 1e-7 seconds
+		# c1 analitically in time
+		c1ᵃⁿᵃˡʸᵗᶦᶜ = im * -exp.(-γₑ * MHz / 4 * (t / factor)) .* (g * kHz / (gᵖʳᶦᵐᵉ * MHz)) .* sinh.(gᵖʳᶦᵐᵉ * MHz * (t / factor))
 	
-		# realpart of c0
-		c0vec = exp.(-γₑ * MHz / 4 * (t / factor)) .* (
+		# c0 analytically
+		c0ᵃⁿᵃˡʸᵗᶦᶜ = exp.(-γₑ * MHz / 4 * (t / factor)) .* (
 			(γₑ * MHz / (4 * gᵖʳᶦᵐᵉ * MHz)) .* sinh.(gᵖʳᶦᵐᵉ * MHz * (t / factor)) .+ cosh.(gᵖʳᶦᵐᵉ * MHz * (t / factor)))
 	
-		c0vec = real(c0vec)
-		c1vec = real(c1vec)
-		return c0vec, c1vec
+		return c0ᵃⁿᵃˡʸᵗᶦᶜ, c1ᵃⁿᵃˡʸᵗᶦᶜ
 	end
 
 	function analytical_components(dt, g) 
 		# dt is in units of 1e-7 seconds, g in kiloherz
 		gᵖʳᶦᵐᵉv = sqrt.(Complex.((γₑ)^2 / 16 .- (g / 1000).^2.)) # in MHz
-		# imaginary of c1
-		c1vec = -exp(-γₑ * MHz / 4 * (dt / factor)) * (g * kHz ./ (gᵖʳᶦᵐᵉv * MHz)) .* sinh.(gᵖʳᶦᵐᵉ * MHz * (dt / factor))
+		
+		# c1 analitically vs g
+		c1ᵃⁿᵃˡʸᵗᶦᶜ = im * -exp(-γₑ * MHz / 4 * (dt / factor)) * (g * kHz ./ (gᵖʳᶦᵐᵉv * MHz)) .* sinh.(gᵖʳᶦᵐᵉ * MHz * (dt / factor))
 	
-		# realpart of c0
-		c0vec = exp.(-γₑ * MHz / 4 * (dt / factor)) * (
+		# c0 analitically vs g
+		c0ᵃⁿᵃˡʸᵗᶦᶜ = exp.(-γₑ * MHz / 4 * (dt / factor)) * (
 			(γₑ * MHz ./ (4 * gᵖʳᶦᵐᵉv * MHz)) .* sinh.(gᵖʳᶦᵐᵉv * MHz * (dt / factor)) .+ cosh.(gᵖʳᶦᵐᵉ * MHz * (dt / factor)))
 	
-		c0vec = real(c0vec)
-		c1vec = real(c1vec)
-		return c0vec, c1vec
+		return c0ᵃⁿᵃˡʸᵗᶦᶜ, c1ᵃⁿᵃˡʸᵗᶦᶜ
 	end
 
-	c0vec, c1vec = analytical_components(t)
+	c0ᵃⁿᵃˡʸᵗᶦᶜ, c1ᵃⁿᵃˡʸᵗᶦᶜ = analytical_components(t)
 
 	# ploting graphs
 
 	# Real(c0)
-	c0ᵖˡᵒᵗ = plot(t,  real(c0vec), xaxis=false, label="\$\\Re{(c_0)}\$ analytical",c=1)
-			 plot!(sol.t,  c0ᵣₑₐₗ, linewidth=3, ls=:dash, label = "\$\\Re{(c_0)}\$ numerical", c=1)
+	c0ᵖˡᵒᵗ = plot(t,  abs.(c0ᵃⁿᵃˡʸᵗᶦᶜ), xaxis=false, label="\$|c_0|\$ analytical",c=1)
+			 plot!(sol.t,  c0ᵃᵇˢ, linewidth=3, ls=:dash, label = "\$|c_0|\$ numerical", c=1)
 
 	# Imag(c1)
-	c1ᵖˡᵒᵗ = plot(t,  real(c1vec), label="\$\\Im{(c_1)}\$ analytical", c=2)
-			 plot!(sol.t,  c1ᵢₘ,   linewidth=3, ls=:dash, label = "\$\\Im{(c_1)}\$ numerical", c=2, xaxis="time (.1µs)")
+	c1ᵖˡᵒᵗ = plot(t,  abs.(c1ᵃⁿᵃˡʸᵗᶦᶜ), label="\$|c_1|\$ analytical", c=2)
+			 plot!(sol.t,  c1ᵃᵇˢ,   linewidth=3, ls=:dash, label = "\$|c_1|\$ numerical", c=2, xaxis="time (µs)")
 
 	
 	
@@ -361,7 +353,7 @@ begin
 	end
 	plot!(sol.t,  c0ᵣₑₐₗ .* c0ᵣₑₐₗ +  c1ᵢₘ .* c1ᵢₘ, linewidth=1, ls=:dash, label = "\$\\langle\\psi(t)|\\psi(t)\\rangle\$ (numerical)", c=2, xaxis="time (.1µs)")
 
-	plot!(t,  (c0vec .* c0vec + c1vec .* c1vec), label = "\$\\langle\\psi(t)|\\psi(t)\\rangle\$ (analytical solution)", linewidth=1, c=2)
+	plot!(t,  (abs.(c0ᵃⁿᵃˡʸᵗᶦᶜ) .^ 2 + abs.(c1ᵃⁿᵃˡʸᵗᶦᶜ) .^ 2), label = "\$\\langle\\psi(t)|\\psi(t)\\rangle\$ (analytical solution)", linewidth=1, c=2)
 
 	
 end
@@ -586,7 +578,7 @@ md"""Remember that a click event heralds the creation of single photon in the mi
 
 As we can see, keeping the ratio between the intrinsic and extrinsic loss rates equal to 1, the entanglement rate scales as $\gamma_e^{-2}$. 
 
-So we can see that **as $\gamma_e$ gets smaller**, i.e. we begin to break our regime, the **entanglement rate increases**, however, as we will see in the following section, the **fidelity of the generated bell pairs gets smaller**. We need to find the balance between the two!
+So we can see that, when keeping g constant, **as $\gamma_e$ gets smaller**, i.e. we begin to break our regime, the **entanglement rate increases**, however, as we will see in the following section, the **fidelity of the generated bell pairs gets smaller**. We need to find the balance between the two!
 
 Also given that the ratio of photons that actually reach the photodetector is equal to $\frac{\gamma_e}{\gamma_e + \gamma_i} = 0.5$, we miss half of the heralding events when the maximal entanglement rate is reached ($\gamma_e = \gamma_i$). 
 
@@ -632,8 +624,8 @@ begin
 	c0dt, c1dt = analytical_components((dt + 0) * factor, real(g₀ * sqrt.(nₚspan)))
 
 	## Trying to plot the infidelity vs pump photons
-	infidelity1 = 1 .- 1 * (c0dt.^ 2 .+ c1dt.^ 2)  # no reset time included
-	infidelity1r = 1 .- 1 * (c0dtr.^ 2 .+ c1dtr.^ 2) # with reset time included
+	infidelity1 = 1 .- 1 * (abs.(c0dt).^ 2 .+ abs.(c1dt).^ 2)  # no reset time included
+	infidelity1r = 1 .- 1 * (abs.(c0dtr).^ 2 .+ abs.(c1dtr).^ 2) # with reset time included
 
 	plotinfidelities = plot(title="Infidelitiy vs nb of photons in p", xaxis="nb of photons in the pump mode", legend=:bottomright)
 	plot!(nₚspan, infidelity1 , label="Infidelity? (\$t_r = 0\$)")
@@ -695,14 +687,11 @@ md"""`The single-photon nonlinear interaction rate log₁₀(g₀ (kHz))` : $slg
 
 # ╔═╡ 63bb7260-a5b2-4206-9d5c-77684ecfdf36
 md"""
-`Particle number (logarithmic) log₁₀(nₚ) : `$slnₚ
+`Number of photons in the pump mode (logarithmic) log₁₀(nₚ) : `$slnₚ
 """
 
 # ╔═╡ b0f49879-df51-44b4-99a9-603f338ad884
 md"""` Extrinsic loss rate γₑ | log₁₀(γₑ (MHz)) : `$slγₑ"""
-
-# ╔═╡ 95516f4e-53b1-43b8-b4a6-8457c6742ad9
-md"""` Time interval: [0 tᶠᶦⁿ] ( .1 µs) | log(tᶠᶦⁿ): `$sllogtᶠᶦⁿ"""
 
 # ╔═╡ 2a0e2d1d-6e6e-4081-99bb-ca6eaf696399
 Markdown.parse("""
@@ -715,7 +704,7 @@ Markdown.parse("""
 # ╔═╡ d11bc08a-641d-426e-8999-805e93afc6ba
 begin
 	plot(title="Two-photon-excitations infidelity")
-	plot!(t, real(abs.(c1vec).^2 ./ (abs.(c0vec) .^2 .+ abs.(c1vec) .^ 2)), xaxis="Time (.1µs )", label="Analytical")
+	plot!(t, real(abs.(c1ᵃⁿᵃˡʸᵗᶦᶜ).^2 ./ (abs.(c0ᵃⁿᵃˡʸᵗᶦᶜ) .^2 .+ abs.(c1ᵃⁿᵃˡʸᵗᶦᶜ) .^ 2)), xaxis="Time (.1µs )", label="Analytical")
 
 	plot!(sol.t, real(abs.(c1ᵢₘ).^2 ./ (abs.(c0ᵣₑₐₗ) .^2 .+ abs.(c1ᵢₘ) .^ 2)), xaxis="Time (.1µs )", label="Numerical", ls=:dash)
 	
@@ -2481,7 +2470,6 @@ version = "1.4.1+0"
 # ╟─cff02deb-0973-4a5c-b905-a38a48ec1e61
 # ╟─ff17c447-bb69-4455-8819-6fa625addc7a
 # ╟─387227e3-e4d9-4453-8845-b3c730999763
-# ╟─ae46e64f-d968-472c-b92b-204faf27ae7c
 # ╟─1164cc37-2062-4ff9-8463-9edfb21db77a
 # ╟─bf31c280-5e88-42d0-85bb-3ab11378aca1
 # ╟─f2fbc3f0-8a51-43e6-8e15-15e2fa61124f
@@ -2539,7 +2527,6 @@ version = "1.4.1+0"
 # ╟─d42743b8-7a16-4445-adfd-82809b1d9d58
 # ╟─63bb7260-a5b2-4206-9d5c-77684ecfdf36
 # ╟─b0f49879-df51-44b4-99a9-603f338ad884
-# ╟─95516f4e-53b1-43b8-b4a6-8457c6742ad9
 # ╟─2a0e2d1d-6e6e-4081-99bb-ca6eaf696399
 # ╟─d11bc08a-641d-426e-8999-805e93afc6ba
 # ╟─e81ca2e2-24f4-4f3c-aa0f-11a9ca9b00f1
