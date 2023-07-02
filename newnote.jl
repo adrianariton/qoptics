@@ -163,7 +163,7 @@ begin
 	buff = similar(ψ0)
 	
 	# Defining the ODE
-	f! = (ψ, p, t) -> -im * mul!(buff, H, ψ);
+	f! = (ψ, p, t) -> ψ = -im * mul!(buff, H, ψ);
 	# or use `f! = (ψ, p, t) -> ψ = -im * H * ψ;`
 
 	# tᶠᶦⁿ is the end of the sampled interval and it is taken to be 20 * 1 / γₑ, where 1 / γₑ is the lifetime of the cavity
