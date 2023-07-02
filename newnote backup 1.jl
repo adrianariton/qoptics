@@ -141,6 +141,11 @@ begin
 	md"""`Deduced parameters:`"""
 end
 
+# ╔═╡ 1164cc37-2062-4ff9-8463-9edfb21db77a
+begin
+tᶠᶦⁿ = 20 / γₑ; # time interval in microseconds
+end;
+
 # ╔═╡ 10209491-8d9f-4056-9358-09101e533dd5
 begin
 	import DifferentialEquations: ODEProblem, solve
@@ -163,11 +168,10 @@ begin
 	buff = similar(ψ0)
 	
 	# Defining the ODE
-	f! = (ψ, p, t) -> -im * mul!(buff, H, ψ);
+	f! = (ψ, p, t) -> ψ = -im * mul!(buff, H, ψ);
 	# or use `f! = (ψ, p, t) -> ψ = -im * H * ψ;`
 
 	# tᶠᶦⁿ is the end of the sampled interval and it is taken to be 20 * 1 / γₑ, where 1 / γₑ is the lifetime of the cavity
-	tᶠᶦⁿ = 20 / γₑ; # time interval in microseconds
 	tspan = (0.0, tᶠᶦⁿ) 
 
 	schrodinger = ODEProblem(f!, ψ0, tspan)
@@ -428,17 +432,7 @@ $$r_e = 2r_0e^{-r_0\Delta t}\frac{\Delta t}{\Delta t + t_r}\text{, where } $$ $$
  
 $$⟨n_p⟩ = \frac{4\gamma_e}{(\gamma_e + \gamma_i)^2} \frac{P}{\hbar \omega}$$
 
-As one notices from the final formula $[*]$, the entanglement rate scales as $α² =\frac{\gamma_e^2}{(\gamma_e + \gamma_i)^4}$ with respect to the $\hat{p}$ pump power, so it is maximum when $\gamma_e = \gamma_i$.
-
-By differentiating equation $[*]$ w.r.t. the number of photons in the pump mode, we obtain a maximal entanglement rate when 
-
-$$nₚ =  (∆t g₀^2 \sqrt{16  α²})^{-1} := nₚ^{optimal}₁,$$
-where $α² =\frac{\gamma_e^2}{(\gamma_e + \gamma_i)^4}.$ We can further take into account the result above and set $\gamma_e = \gamma_i$, and thus $α²$ becomes
-
-$$α² =\frac{\gamma_e^2}{(\gamma_e + \gamma_e)^4} = \frac{1}{16\gamma_e^2}, $$
-so $nₚ^{optimal}₁$ becomes 
-
-$$nₚ^{optimal} :=  \frac{\gamma_e}{∆t g₀^2}$$
+As one notices from the final formula $[*]$, the entanglement rate scales as $\frac{\gamma_e^2}{(\gamma_e + \gamma_i)^4}$ with respect to the $\hat{p}$ pump power, so it is maximum when $\gamma_e = \gamma_i$.
 
 Below we plot the entanglement rate $r_e$ with respect to the power of and the number of photons in the pump mode $\hat{p}$. One can vizualize the entanglement rate when $\gamma_e = \gamma_i$ (maximum entanglement rate), as well as when there is no intrinsic loss rate ($\gamma_i = 0$) by toggling the `Guides` option.
 """
@@ -465,10 +459,7 @@ md"""` γᵢ/γₑ : `$(slγᵢfγₑ = @bind γᵢfγₑ Slider(0:0.01:1; defau
 md"""`Logarithmic y(entanglement rate) axis logʳᵃᵗᵉ : `$(sllogʳᵃᵗᵉ = @bind logʳᵃᵗᵉ CheckBox(default=true))"""
 
 # ╔═╡ e2d9c02f-d7aa-4d3a-9a1d-2a0ef14d74ad
-md"""`Guide : `$(@bind guide CheckBox(default=false))
-
-`Center plot : `$(@bind centerplot CheckBox(default=false))"""
-
+md"""`Guide : `$(@bind guide CheckBox(default=false))"""
 
 # ╔═╡ 8dfaa441-de2e-47f4-869d-bf4471541b22
 Markdown.parse("""
@@ -531,7 +522,7 @@ end
 # ╔═╡ aa70bca1-61f0-4e60-937b-3b42a0b4d493
 begin
 	γᵢ = γᵢfγₑ * γₑ
-
+	
 	if g₀ * kHz<= 600
 		lognₚspan = 1:0.1:7
 	elseif g₀ * kHz <= 2000
@@ -541,20 +532,16 @@ begin
 	elseif g₀ * kHz <= 1e8
 		lognₚspan = -10.0:0.1:9.5
 	end
-	
-	∆t 			  	= ∆tµs * 1e-7 					# pump pulse duration is in seconds
-	tᵣ 				= 1e-6 							# reset time in seconds
 
-	α² 	= ((γₑ * MHz) / (γₑ * MHz + γᵢ * MHz)^2)^2  # scaling factor α²
-	nₚᵒᵖᵗᶦᵐᵃˡ₁ = 1 / (∆t * sqrt(16 * α²) * (g₀ * kHz)^2) # nₚ for which the maximum rₑ is achieved
-	nₚᵒᵖᵗᶦᵐᵃˡ = (γₑ * MHz) / (∆t * (g₀ * kHz)^2) 		# nₚ for which the maximum rₑ is achieved (also taking γᵢ=γₑ)
-
-	# if centerplot is true, center the plot by updating lognₚspan
-	centerplot && (lognₚspan = (log10(nₚᵒᵖᵗᶦᵐᵃˡ) - 3):0.1:(log10(nₚᵒᵖᵗᶦᵐᵃˡ) + 3))
-	
 	nₚspan = 10 .^ lognₚspan
+	
 	logpspan = logpowerspan(lognₚspan, γₑ, γᵢ)
+
 	pspan = 10 .^ logpspan
+	
+	scalingfactor 	= 16 * ((γₑ * MHz) / (γₑ * MHz + γₑ * MHz)^2)^2
+	∆t 			  	= ∆tµs * 1e-7 # dt is in seconds
+	tᵣ 				= 1e-6
 	
 	rₑ     = entanglement_rate(lognₚspan, γₑ, γᵢ, g₀, ∆t, tᵣ; logy=logʳᵃᵗᵉ)
 	rₑmax  = entanglement_rate(lognₚspan, γₑ, γₑ, g₀, ∆t, tᵣ; logy=logʳᵃᵗᵉ)
@@ -570,18 +557,11 @@ begin
 	if guide
 		plot!(nₚspan, rₑmax, label="\$r_e\$ (γₑ = γᵢ)", c=2)
 		plot!(nₚspan, rₑ0, label="\$r_e\$ (γᵢ = 0)", c=2, ls=:dash)
-
 	end
 
 	plot!(nₚspan, rₑ, label="\$r_e\$ [1 click event]", c=1)
 	plot!(nₚspan, rₑ²ᶜˡᶦᶜᵏˢ .+ rₑ, xaxis="nb of photons in the pump mode", label="\$r_e\$ [1 or 2 click events]", c=1, ls=:dash)
 	plot!(nₚspan, rₑᵖᵘʳᵉ, label="\$r_e\$ (+ purification)", c=3, ls=:dashdot)
-
-	# plot maximum points
-	if guide	
-		vline!(plotnp, [nₚᵒᵖᵗᶦᵐᵃˡ₁], c=1, ls=:dashdotdot, label="Optimal nₚ")
-		vline!(plotnp, [nₚᵒᵖᵗᶦᵐᵃˡ], c=2, ls=:dashdotdot, label="Optimal nₚ (γₑ = γᵢ)")
-	end
 	
 	plotpower = plot(legend=:none, yaxis=false, xaxis="Power / \$\\hbar\\omega\$")
 	plot!(pspan, pspan * 0, color=:black)
@@ -659,7 +639,7 @@ begin
 	# 2. with reset time included
 	infidelity1r = 1 .- 1 * (abs.(c0dtr).^ 2 .+ abs.(c1dtr).^ 2) 
 
-	plotinfidelities = plot(title="Infidelitiy vs nb of photons in pump mode", xaxis="nb of photons in the pump mode", legend=:bottomright)
+	plotinfidelities = plot(title="Infidelitiy vs nb of photons in p", xaxis="nb of photons in the pump mode", legend=:bottomright)
 	plot!(nₚspan, infidelity1 , label="Infidelity? (\$t_r = 0\$)")
 	plot!(nₚspan, infidelity1r , label="Infidelity?")
 
@@ -2499,6 +2479,7 @@ version = "1.4.1+0"
 # ╟─4eb251c5-2323-4185-8320-d33316cbf047
 # ╟─f1f6c0f6-8281-4ab5-b2b8-b0f1ba3c26e5
 # ╟─45929b93-3ce5-4db3-a22a-423a28c8f32d
+# ╟─01177799-1814-40da-ad12-05d5215642fd
 # ╟─7920ef3e-d71e-45a5-8043-790dfb2022e7
 # ╟─f833a02d-aba5-4046-9a66-2e7af298a793
 # ╠═10209491-8d9f-4056-9358-09101e533dd5
@@ -2507,6 +2488,7 @@ version = "1.4.1+0"
 # ╟─cff02deb-0973-4a5c-b905-a38a48ec1e61
 # ╟─ff17c447-bb69-4455-8819-6fa625addc7a
 # ╟─387227e3-e4d9-4453-8845-b3c730999763
+# ╟─1164cc37-2062-4ff9-8463-9edfb21db77a
 # ╟─bf31c280-5e88-42d0-85bb-3ab11378aca1
 # ╟─f2fbc3f0-8a51-43e6-8e15-15e2fa61124f
 # ╟─91ce7b5d-cbcc-4cf5-8999-c2edd5e2bccf
@@ -2554,7 +2536,7 @@ version = "1.4.1+0"
 # ╟─b5747e4f-a300-4705-80f7-2e5ec1184041
 # ╟─b20c1921-9935-4013-b74e-830db0f82023
 # ╟─fedf62db-d9f0-4edf-904e-bb14885ac80b
-# ╟─9b170d18-9d9f-4863-b98b-4e8a8c6b836d
+# ╠═9b170d18-9d9f-4863-b98b-4e8a8c6b836d
 # ╟─8d76397d-7d0b-4fc3-9990-da676c5ae22b
 # ╟─7082e2a0-486f-4803-89e2-409e91cb5a1a
 # ╟─e9855f2c-8fc8-40c4-997a-a60a6da3d22b
@@ -2565,7 +2547,7 @@ version = "1.4.1+0"
 # ╟─63bb7260-a5b2-4206-9d5c-77684ecfdf36
 # ╟─b0f49879-df51-44b4-99a9-603f338ad884
 # ╟─2a0e2d1d-6e6e-4081-99bb-ca6eaf696399
-# ╟─d11bc08a-641d-426e-8999-805e93afc6ba
+# ╠═d11bc08a-641d-426e-8999-805e93afc6ba
 # ╟─c64d4dd4-5c38-4676-ba98-8c54b2ed0237
 # ╟─e81ca2e2-24f4-4f3c-aa0f-11a9ca9b00f1
 # ╟─488ed2f2-190b-46f2-b9ae-80b41c9ee4ff
