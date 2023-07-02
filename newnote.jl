@@ -105,32 +105,32 @@ md"""We can plot the solution $|\psi\rangle$ using the aforementioned formulas, 
 """
 
 # ╔═╡ 762c3311-da7f-4f0c-b7da-5df285f404cd
-md"""Below we plot numerical and analytical solutions for the components of both $|00\rangle$ and $|11\rangle$ of state $|\psi\rangle$ with respect to time. Move the sliders above to modify the set of parameters or to widen the time interval for the graph. 
+md"""Below we plot numerical and analytical solutions for the components of both $|00\rangle$ and $|11\rangle$ ($c_0$ and $c_1$ respectively) of state $|\psi\rangle$ with respect to time. Move the sliders above to modify the set of parameters or to widen the time interval for the graph. 
 
 A logarithmic scale has been chosen for most sliders to facilitate the visualization of a wider range of parameters.
 """
 
 # ╔═╡ cff02deb-0973-4a5c-b905-a38a48ec1e61
-md"""`The single-photon nonlinear interaction rate log₁₀(g₀ (kHz)) : `$(slg = @bind log₁₀g₀ Slider(0:0.25:6; default=0, show_value=true))"""
+md"""`The single-photon nonlinear interaction rate log₁₀(g₀ (Hz)) : `$(slg = @bind log₁₀g₀ Slider(1:1:5; default=3, show_value=true))"""
 
 # ╔═╡ ff17c447-bb69-4455-8819-6fa625addc7a
 md"""
-`Number of photons in the pump mode (logarithmic) log₁₀(nₚ) : `$(slnₚ = @bind log₁₀nₚ Slider(0:0.5:10; default=6, show_value=true))
+`Number of photons in the pump mode (logarithmic) log₁₀(nₚ) : `$(slnₚ = @bind log₁₀nₚ Slider(0:0.5:3; default=2, show_value=true))
 """
 
 # ╔═╡ 387227e3-e4d9-4453-8845-b3c730999763
-md"""` Extrinsic loss rate γₑ | log₁₀(γₑ (MHz)) : `$(slγₑ = @bind log₁₀γₑ Slider(-4:0.05:4; default=2, show_value=true))"""
+md"""` Extrinsic loss rate γₑ | log₁₀(γₑ (MHz)) : `$(slγₑ = @bind log₁₀γₑ Slider(1:1:4; default=2, show_value=true))"""
 
 # ╔═╡ bf31c280-5e88-42d0-85bb-3ab11378aca1
 begin
-	g₀ = 10 ^ log₁₀g₀
+	g₀ = 10 ^ log₁₀g₀ / 1000 # g₀ in kHz
 	nₚ = 10^log₁₀nₚ
 	γₑ = 10^log₁₀γₑ
 	g = g₀ * sqrt(nₚ)
 	if (γₑ)^2 / 16 - (g / 1000)^2 > 0
 		gᵖʳᶦᵐᵉ = sqrt((γₑ)^2 / 16 - (g / 1000)^2)
 	else
-		gᵖʳᶦᵐᵉ = im * sqrt(-((γₑ)^2 / 16 - (g / 1000)^2))
+		@warn "g' is imaginary"
 	end
 	 # in MegaHerz
 	md"""`Deduced parameters:`"""
@@ -145,21 +145,25 @@ end
 # ╔═╡ 10209491-8d9f-4056-9358-09101e533dd5
 begin
 	using DifferentialEquations
-	MHz = 1e6
+	# conversion units
+	MHz = 1e6       
 	kHz = 1e3
-	MkHz = 1e3
 	factor = 1e6 	# time is ploted in units of 1 microseconds
 
-	H = [0 g*kHz/factor
-		 conj(g * kHz)/factor  -im * γₑ * MHz/(2.0)/factor] # H in Hz
-	
+	# Hamiltonian scaled by 1e-6, to overcome overflow
+	H = [0 						g*kHz/factor
+		 conj(g * kHz)/factor  -im * γₑ * MHz/(2.0)/factor]
+
+	# Defining the ODE
 	f(ψ, p, t) = -im * H * ψ
 
 	# Initial condition: fock state at t=0
 	ψ0 = [1.0 + 0.0im
 		0.0 + 0.0im]
-	
-	tspan = (0.0, tᶠᶦⁿ)
+
+	# tᶠᶦⁿ is the end of the sampled interval and it is taken to be 20 * 1 / γₑ, where 1 / γₑ is the lifetime of the cavity
+	tspan = (0.0, tᶠᶦⁿ) 
+
 	schrodinger = ODEProblem(f, ψ0, tspan)
 
 	# c_0 and c_1 are extracted from sol
@@ -184,31 +188,15 @@ begin
 	
 	using Plots
 	
-	nt2 = length(sol.t)
-	c0ᵣₑₐₗ = zeros(nt2)
-	c1ᵣₑₐₗ = zeros(nt2)
+	nb_sample_points = length(sol.t)
 	
-	c0ᵢₘ = zeros(nt2)
-	c1ᵢₘ = zeros(nt2)
-
-	c0ᵃᵇˢ = zeros(nt2)
-	c1ᵃᵇˢ = zeros(nt2)
+	c0ⁿᵘᵐ = im * zeros(nb_sample_points)
+	c1ⁿᵘᵐ = im * zeros(nb_sample_points)
 	
-	for i in 1:nt2
-	    c0ᵣₑₐₗ[i] = real(sol.u[i][1])
-	    c1ᵣₑₐₗ[i] = real(sol.u[i][2])
-
-		c0ᵢₘ[i] = imag(sol.u[i][1])
-		c1ᵢₘ[i] = imag(sol.u[i][2])
-
-		c0ᵃᵇˢ[i] = abs(sol.u[i][1])
-		c1ᵃᵇˢ[i] = abs(sol.u[i][2])
-	end
-
-	# plot(sol.t,  c0ᵣₑₐₗ, linewidth=3, ls=:dash, label = "\$real(c_0)\$")
-	# plot(sol.t,  c0ᵣₑₐₗ, linewidth=3, ls=:dash, label = "\$real(c_0)\$")
-	
-	
+	for i in 1:nb_sample_points
+		c0ⁿᵘᵐ[i] = sol.u[i][1]
+		c1ⁿᵘᵐ[i] = sol.u[i][2]
+	end;
 end;
 
 # ╔═╡ f2fbc3f0-8a51-43e6-8e15-15e2fa61124f
@@ -221,25 +209,38 @@ Markdown.parse("""
 
 # ╔═╡ d09b3c71-8049-4bf6-b00f-0c93e438ec51
 begin
-	function analytical_components(t)	# t is in units of 1e-7 seconds
+	#= implements the aforementionned formulas
+	   @params: 
+	       	- t: vector of timestamps to be sampled (in units of microseconds)
+	   @returns:
+			- c0ᵃⁿᵃˡʸᵗᶦᶜ, c1ᵃⁿᵃˡʸᵗᶦᶜ: arrays containing the |00⟩ and |11⟩ population of the state, at each timestamp from t
+	=#
+	function analytical_components(t)
 		# c1 analitically in time
 		c1ᵃⁿᵃˡʸᵗᶦᶜ = im * -exp.(-γₑ * MHz / 4 * (t / factor)) .* (g * kHz / (gᵖʳᶦᵐᵉ * MHz)) .* sinh.(gᵖʳᶦᵐᵉ * MHz * (t / factor))
 	
-		# c0 analytically
+		# c0 analytically in time
 		c0ᵃⁿᵃˡʸᵗᶦᶜ = exp.(-γₑ * MHz / 4 * (t / factor)) .* (
 			(γₑ * MHz / (4 * gᵖʳᶦᵐᵉ * MHz)) .* sinh.(gᵖʳᶦᵐᵉ * MHz * (t / factor)) .+ cosh.(gᵖʳᶦᵐᵉ * MHz * (t / factor)))
 	
 		return c0ᵃⁿᵃˡʸᵗᶦᶜ, c1ᵃⁿᵃˡʸᵗᶦᶜ
 	end
 
+	#=  the |00⟩ and |11⟩ population of the state at time dt, calculated for each 		value og g in the g array.
+		@params:
+			- dt: timestamp to calculate the returned values at
+			- g: array of values of g to calculate the returned values
+		@returns:
+			- c0ᵃⁿᵃˡʸᵗᶦᶜ, c1ᵃⁿᵃˡʸᵗᶦᶜ: arrays containing the |00⟩ and |11⟩ population of the state, calculated at timstamp dt, for each element of array g
+	=#
 	function analytical_components(dt, g) 
-		# dt is in units of 1e-7 seconds, g in kiloherz
+		# dt is in units of 1e-6 seconds, g in kiloherz
 		gᵖʳᶦᵐᵉv = sqrt.(Complex.((γₑ)^2 / 16 .- (g / 1000).^2.)) # in MHz
 		
-		# c1 analitically vs g
+		# c1 analitically vs g, g = g₀*sqrt(nₚ)
 		c1ᵃⁿᵃˡʸᵗᶦᶜ = im * -exp(-γₑ * MHz / 4 * (dt / factor)) * (g * kHz ./ (gᵖʳᶦᵐᵉv * MHz)) .* sinh.(gᵖʳᶦᵐᵉ * MHz * (dt / factor))
 	
-		# c0 analitically vs g
+		# c0 analitically vs g, g = g₀*sqrt(nₚ)
 		c0ᵃⁿᵃˡʸᵗᶦᶜ = exp.(-γₑ * MHz / 4 * (dt / factor)) * (
 			(γₑ * MHz ./ (4 * gᵖʳᶦᵐᵉv * MHz)) .* sinh.(gᵖʳᶦᵐᵉv * MHz * (dt / factor)) .+ cosh.(gᵖʳᶦᵐᵉ * MHz * (dt / factor)))
 	
@@ -248,18 +249,18 @@ begin
 
 	c0ᵃⁿᵃˡʸᵗᶦᶜ, c1ᵃⁿᵃˡʸᵗᶦᶜ = analytical_components(t)
 
-	# ploting graphs
+	# Ploting graphs
 
-	# Real(c0)
-	c0ᵖˡᵒᵗ = plot(t,  abs.(c0ᵃⁿᵃˡʸᵗᶦᶜ), xaxis=false, label="\$|c_0|\$ analytical",c=1)
-			 plot!(sol.t,  c0ᵃᵇˢ, linewidth=3, ls=:dash, label = "\$|c_0|\$ numerical", c=1)
+	# |00⟩ population
+	c0ᵖˡᵒᵗ = plot(t,  abs.(c0ᵃⁿᵃˡʸᵗᶦᶜ), xaxis=false, label="|00⟩ population (analytical)",c=1)
+			 plot!(sol.t,  abs.(c0ⁿᵘᵐ), linewidth=3, ls=:dash, label = "|00⟩ population (numerical)", c=1)
 
-	# Imag(c1)
-	c1ᵖˡᵒᵗ = plot(t,  abs.(c1ᵃⁿᵃˡʸᵗᶦᶜ), label="\$|c_1|\$ analytical", c=2)
-			 plot!(sol.t,  c1ᵃᵇˢ,   linewidth=3, ls=:dash, label = "\$|c_1|\$ numerical", c=2, xaxis="time (µs)")
+	# |11⟩ population
+	c1ᵖˡᵒᵗ = plot(t,  abs.(c1ᵃⁿᵃˡʸᵗᶦᶜ), label="|11⟩ population (analytical)", c=2)
+			 plot!(sol.t,  abs.(c1ⁿᵘᵐ),   linewidth=3, ls=:dash, label = "|11⟩ population (numerical)", c=2, xaxis="time (µs)")
 
 	
-	
+	# Plot layout
 	plot(
 	    c0ᵖˡᵒᵗ,
 	    
@@ -309,20 +310,30 @@ Below we plot the rate of photon generation $r_0$ with respect to time. The affo
 
 # ╔═╡ 2c03e491-a652-4548-afae-3384788c0b2b
 begin
-function get_regime(g, γₑ)
-	raport = g * kHz / (γₑ * MHz)
-	message = "Respecting our regime"
-	if raport > 0.25
-		message = "Tons of oscilations (g' is imaginary)"
-	elseif raport > 0.1
-		message = "Outside of our regime"
-	elseif raport > 0.01
-		message = "Begining to break the regime"
-	end
-	return message
-end
-	md""""""
-end
+	#= function that returnt a message describing the regime, based
+	   on the value of g/γₑ
+	=#
+	function get_regime(g, γₑ)
+		raport = g * kHz / (γₑ * MHz)
+		message = "Respecting our regime"
+		if raport > 0.25
+			message = "Tons of oscilations (g' is imaginary)"
+			@warn "g' is imaginary"
+		elseif raport > 0.1
+			message = "Outside of our regime"
+		elseif raport > 0.01
+			message = "Begining to break the regime"
+		end
+		return message
+	end;
+end;
+
+# ╔═╡ 89f595fe-b58e-4832-aba8-4ea50b1de810
+Markdown.parse("""
+|g / γₑ            | Comments 				   |
+|:-----------------|:--------------------------|
+|`$(g * kHz / (γₑ * MHz))`      | `$(get_regime(g, γₑ))`    |
+""")
 
 # ╔═╡ aa27c4d0-161c-44af-a235-8cffd0e17393
 md"""Show $e^{(2g' - \frac{\gamma_e}{2})t}$ ` approximation : `$(@bind approx2 CheckBox(default=false))"""
@@ -351,7 +362,7 @@ begin
 			plot!(t, imag(exp.((2 * gᵖʳᶦᵐᵉ - γₑ/2) *MHz * t / factor)), linewidth=1, ls=:dashdotdot, label = "Aproximation [Imaginary Part]", c=1)
 		end
 	end
-	plot!(sol.t,  c0ᵣₑₐₗ .* c0ᵣₑₐₗ +  c1ᵢₘ .* c1ᵢₘ, linewidth=1, ls=:dash, label = "\$\\langle\\psi(t)|\\psi(t)\\rangle\$ (numerical)", c=2, xaxis="time (.1µs)")
+	plot!(sol.t,  abs.(c0ⁿᵘᵐ) .^2 +  abs.(c1ⁿᵘᵐ) .^ 2, linewidth=1, ls=:dash, label = "\$\\langle\\psi(t)|\\psi(t)\\rangle\$ (numerical)", c=2, xaxis="time (µs)")
 
 	plot!(t,  (abs.(c0ᵃⁿᵃˡʸᵗᶦᶜ) .^ 2 + abs.(c1ᵃⁿᵃˡʸᵗᶦᶜ) .^ 2), label = "\$\\langle\\psi(t)|\\psi(t)\\rangle\$ (analytical solution)", linewidth=1, c=2)
 
@@ -438,13 +449,13 @@ md"""We also plot the entanglement rate after  [purification](#c6d24b06-f1aa-473
 md""""""
 
 # ╔═╡ c5a2437e-c77f-4a04-84ce-cb73a682fac5
-md"""` Pump pulse duration: ∆t (.1µs)  : `$(sldtµs = @bind dtµs Slider(1:0.01:10; default=1, show_value=true))"""
+md"""` Pump pulse duration: ∆t (.1µs)  : `$(sldtµs = @bind ∆tµs Slider(1:0.01:10; default=1, show_value=true))"""
 
 # ╔═╡ 7ab52be5-fecd-440d-bd5d-60489ff10f3b
 md"""` Extrinsic loss rate γₑ | log₁₀(γₑ (MHz)) : `$slγₑ"""
 
 # ╔═╡ 7a602c0a-2615-44ad-af85-4e67f4ab1070
-md"""`The single-photon nonlinear interaction rate log₁₀(g₀ (kHz))` : $slg """
+md"""`The single-photon nonlinear interaction rate log₁₀(g₀ (Hz))` : $slg """
 
 # ╔═╡ ab51bd5c-a3a4-40ce-a4b1-343d5d938f8c
 md"""` γᵢ/γₑ : `$(slγᵢfγₑ = @bind γᵢfγₑ Slider(0:0.01:1; default=1, show_value=true))"""
@@ -472,45 +483,56 @@ Markdown.parse("""
 
 # ╔═╡ ecedd49b-e036-4c9a-94c4-a8e119309dc2
 begin
-	function entanglement_rate(log_range, γₑ, γᵢ, g₀, dt, tr; power=false, moreevents=false, logy=false, purification=false)
-		if power ==false
-			r0vec = 4 * (g₀ * kHz)^2 * (10 .^ log_range) * (γₑ * MHz) / (γₑ * MHz + γᵢ * MHz)^2
-		else
-			logpspan = -log10( 4 * (γₑ * MHz) / (γₑ * MHz + γᵢ * MHz)^2) .+ log_range
-			npspan = (4 * (γₑ * MHz) / (γₑ * MHz + γᵢ * MHz)^2 * (10 .^ (logpspan)))
-			r0vec = 4 * (g₀ * kHz)^2 * npspan * (γₑ * MHz) / (γₑ * MHz + γᵢ * MHz)^2
-		end
+	#= Returns the entanglement rate rₑ as an array calculated w.r.t. the number of    photons in the pump mode.
+	   @params:
+			- log_range: array of points to be sampled log(number of photons in the pump mode)
+			- γₑ, γᵢ: 	extrinsic and intrinsic loss rates
+			- g₀: 		coupling
+			- ∆t, tᵣ: 	pump pulse duration and reset time
+	   @options:
+			- twoclicks: 	account for 2 click events
+			- logy: 		return the log of rₑ instead of rₑ
+			- purification: return rₑ, if purification is performed (effectively halved the entanglement rare)
+	=#
+	function entanglement_rate(log_range, γₑ, γᵢ, g₀, ∆t, tᵣ; twoclicks=false, logy=false, purification=false)
+
+		r₀ = 4 * (g₀ * kHz)^2 * (10 .^ log_range) * (γₑ * MHz) / (γₑ * MHz + γᵢ * MHz)^2
 	
-		if moreevents == false
-			revec = 2 * r0vec .* exp.(- r0vec * dt) * dt / (dt + tr)
+		if twoclicks == false
+			rₑ = 2 * r₀ .* exp.(- r₀ * ∆t) * ∆t / (∆t + tᵣ)
 		else
-			revec = 2 * r0vec .^ 2 .* exp.(- r0vec * dt) * dt ^ 2 / 2 / (dt + tr) 
+			rₑ = 2 * r₀ .^ 2 .* exp.(- r₀ * ∆t) * ∆t ^ 2 / 2 / (∆t + tᵣ) 
 		end
 
 		if purification
-			revec=  revec / 2
+			# halves the entanglement rate
+			rₑ =  rₑ / 2
 		end
 
 		if logy
-			return log10.(revec)
+			return log10.(rₑ)
 		else
-			return revec
+			return rₑ
 		end
 	end
 
 	logpowerspan(log_range, γₑ, γᵢ) = -log10( 4 * (γₑ * MHz) / (γₑ * MHz + γᵢ * MHz)^2) .+ log_range
 
-	md""""""
+	html"""<sub><sup>
+Click the eye icon to the left to see how the aforementioned formulas are implemented</sup></sub>"""
 end
 
 # ╔═╡ aa70bca1-61f0-4e60-937b-3b42a0b4d493
 begin
 	γᵢ = γᵢfγₑ * γₑ
-	if g₀ < 200
+	
+	if g₀ * kHz<= 600
+		lognₚspan = 1:0.1:7
+	elseif g₀ * kHz <= 2000
 		lognₚspan = 6:0.1:9.5
-	elseif g₀ < 1e4
+	elseif g₀ * kHz <= 1e4
 		lognₚspan = 0:0.1:9.5
-	elseif g₀ < 1e8
+	elseif g₀ * kHz <= 1e8
 		lognₚspan = -10.0:0.1:9.5
 	end
 
@@ -521,47 +543,36 @@ begin
 	pspan = 10 .^ logpspan
 	
 	scalingfactor 	= 16 * ((γₑ * MHz) / (γₑ * MHz + γₑ * MHz)^2)^2
-	dt 			  	= dtµs * 1e-7 # dt is in seconds
-	tr 				= 1e-6
+	∆t 			  	= ∆tµs * 1e-7 # dt is in seconds
+	tᵣ 				= 1e-6
 	
-	revec     = entanglement_rate(lognₚspan, γₑ, γᵢ, g₀, dt, tr; logy=logʳᵃᵗᵉ)
-	revecmax  = entanglement_rate(lognₚspan, γₑ, γₑ, g₀, dt, tr; logy=logʳᵃᵗᵉ)
-	revec0    =	entanglement_rate(lognₚspan, γₑ, 0 , g₀, dt, tr; logy=logʳᵃᵗᵉ)
+	rₑ     = entanglement_rate(lognₚspan, γₑ, γᵢ, g₀, ∆t, tᵣ; logy=logʳᵃᵗᵉ)
+	rₑmax  = entanglement_rate(lognₚspan, γₑ, γₑ, g₀, ∆t, tᵣ; logy=logʳᵃᵗᵉ)
+	rₑ0    = entanglement_rate(lognₚspan, γₑ, 0 , g₀, ∆t, tᵣ; logy=logʳᵃᵗᵉ)
 		
-	revec_pure= entanglement_rate(lognₚspan, γₑ, γᵢ, g₀, dt, tr; logy=logʳᵃᵗᵉ, purification=true)
+	rₑᵖᵘʳᵉ = entanglement_rate(lognₚspan, γₑ, γᵢ, g₀, ∆t, tᵣ; logy=logʳᵃᵗᵉ, purification=true)
 
-	revecp    =	entanglement_rate(lognₚspan, γₑ, γᵢ, g₀, dt, tr; power=true, logy=logʳᵃᵗᵉ)
-	revecpmax = entanglement_rate(lognₚspan, γₑ, γₑ, g₀, dt, tr; power=true, logy=logʳᵃᵗᵉ)
-	revecp0   =	entanglement_rate(lognₚspan, γₑ, 0 , g₀, dt, tr; power=true, logy=logʳᵃᵗᵉ)
-
-	revecmany = entanglement_rate(lognₚspan, γₑ, 0 , g₀, dt, tr; moreevents=true, logy=logʳᵃᵗᵉ)
+	rₑ²ᶜˡᶦᶜᵏˢ = entanglement_rate(lognₚspan, γₑ, 0 , g₀, ∆t, tᵣ; twoclicks=true, logy=logʳᵃᵗᵉ)
 
 	
 	plotnp = plot(title="Entanglement Rate (Hz)",legend=:bottomleft)
 
 	if guide
-		plot!(nₚspan, revecmax, label="\$r_e\$ (γₑ = γᵢ)", c=2)
-		plot!(nₚspan, revec0, label="\$r_e\$ (γᵢ = 0)", c=2, ls=:dash)
+		plot!(nₚspan, rₑmax, label="\$r_e\$ (γₑ = γᵢ)", c=2)
+		plot!(nₚspan, rₑ0, label="\$r_e\$ (γᵢ = 0)", c=2, ls=:dash)
 	end
 
-	plot!(nₚspan, revec, label="\$r_e\$ [1 click event]", c=1)
-	plot!(nₚspan, revecmany .+ revec, xaxis="nb of photons in the pump mode", label="\$r_e\$ [1 or 2 click events]", c=1, ls=:dash)
-	plot!(nₚspan, revec_pure, label="\$r_e\$ (+ purification)", c=3, ls=:dashdot)
+	plot!(nₚspan, rₑ, label="\$r_e\$ [1 click event]", c=1)
+	plot!(nₚspan, rₑ²ᶜˡᶦᶜᵏˢ .+ rₑ, xaxis="nb of photons in the pump mode", label="\$r_e\$ [1 or 2 click events]", c=1, ls=:dash)
+	plot!(nₚspan, rₑᵖᵘʳᵉ, label="\$r_e\$ (+ purification)", c=3, ls=:dashdot)
 	
 	plotpower = plot(legend=:none, yaxis=false, xaxis="Power / \$\\hbar\\omega\$")
 	plot!(pspan, pspan * 0, color=:black)
-	#if guide
-	#	plot!(pspan, revecpmax, label="\$r_e\$ (γₑ = γᵢ)", c=2)
-	#	plot!(pspan, revecp0, label="\$r_e\$ (γᵢ = 0)", c=2, ls=:dash)		
 
-	#end
-
-	# plot!(pspan, revecp, xaxis="Power / \$\\hbar\\omega\$", label="\$r_e\$", c=1)
-	# plot!(pspan, revecp, label="\$r_e\$ (+ purification)", c=3, ls=:dashdot)
-
-	
 	if (logʳᵃᵗᵉ == true)
-		plot(plotnp, plotpower, layout = grid(2, 1, heights=[0.99, 0.01]), xscale=:log10, ylimits=(0,maximum(revecmax))) # TODO: find way to use yscale=:log10 without it crashing. cutoff unimportant examples (y < 1 => cut)
+		plot(plotnp, plotpower, layout = grid(2, 1, heights=[0.99, 0.01]), xscale=:log10, ylimits=(-5, maximum(rₑmax))) 
+		
+		# TODO: find way to use yscale=:log10 without it crashing. cutoff unimportant examples (y < 1 => cut)
 	else
 		plot(plotnp, plotpower, layout = grid(2, 1, heights=[0.99, 0.01]), xscale=:log10)
 	end
@@ -620,8 +631,8 @@ Markdown.parse("""
 # ╔═╡ 9b170d18-9d9f-4863-b98b-4e8a8c6b836d
 begin
 	# real part of c0 and imaginary of c1
-	c0dtr, c1dtr = analytical_components((dt + tr) * factor, real(g₀ * sqrt.(nₚspan)))
-	c0dt, c1dt = analytical_components((dt + 0) * factor, real(g₀ * sqrt.(nₚspan)))
+	c0dtr, c1dtr = analytical_components((∆t + tᵣ) * factor, real(g₀ * sqrt.(nₚspan)))
+	c0dt, c1dt = analytical_components((∆t + 0) * factor, real(g₀ * sqrt.(nₚspan)))
 
 	## Trying to plot the infidelity vs pump photons
 	infidelity1 = 1 .- 1 * (abs.(c0dt).^ 2 .+ abs.(c1dt).^ 2)  # no reset time included
@@ -683,7 +694,7 @@ md"""In the following graph we can visualize the probability that the SPDC will 
 One can modify the first two sliders in order to increase $g$ which is equal to $g_0\sqrt{⟨n_p⟩}$ or modify the 3rd slider to decrease $\gamma_e$ to see how breaking the assumed regime increases the two-photon-excitation infidelity"""
 
 # ╔═╡ d42743b8-7a16-4445-adfd-82809b1d9d58
-md"""`The single-photon nonlinear interaction rate log₁₀(g₀ (kHz))` : $slg """
+md"""`The single-photon nonlinear interaction rate log₁₀(g₀ (Hz))` : $slg """
 
 # ╔═╡ 63bb7260-a5b2-4206-9d5c-77684ecfdf36
 md"""
@@ -706,7 +717,7 @@ begin
 	plot(title="Two-photon-excitations infidelity")
 	plot!(t, real(abs.(c1ᵃⁿᵃˡʸᵗᶦᶜ).^2 ./ (abs.(c0ᵃⁿᵃˡʸᵗᶦᶜ) .^2 .+ abs.(c1ᵃⁿᵃˡʸᵗᶦᶜ) .^ 2)), xaxis="Time (.1µs )", label="Analytical")
 
-	plot!(sol.t, real(abs.(c1ᵢₘ).^2 ./ (abs.(c0ᵣₑₐₗ) .^2 .+ abs.(c1ᵢₘ) .^ 2)), xaxis="Time (.1µs )", label="Numerical", ls=:dash)
+	plot!(sol.t, real(abs.(c1ⁿᵘᵐ).^2 ./ (abs.(c0ⁿᵘᵐ) .^2 .+ abs.(c1ⁿᵘᵐ) .^ 2)), xaxis="Time (.1µs )", label="Numerical", ls=:dash)
 	
 	# TODO change to fit
 	#plot!(t, (t ./ t) * g * kHz / (γₑ * MHz), ls=:dash, c=2)
@@ -2476,6 +2487,7 @@ version = "1.4.1+0"
 # ╟─91ce7b5d-cbcc-4cf5-8999-c2edd5e2bccf
 # ╟─d09b3c71-8049-4bf6-b00f-0c93e438ec51
 # ╟─76ba8fca-8425-4991-a04c-957c5748caa4
+# ╟─89f595fe-b58e-4832-aba8-4ea50b1de810
 # ╟─c746c416-e559-45a3-84be-f21ab256a5a3
 # ╟─5989cbc6-9e3e-46bf-9e70-8ea992629a9d
 # ╟─ee358a4b-5c94-4bd1-b2a2-3c9846abf38f
