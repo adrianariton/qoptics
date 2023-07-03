@@ -459,13 +459,13 @@ md"""` Extrinsic loss rate γₑ | log₁₀(γₑ (MHz)) : `$slγₑ"""
 md"""`The single-photon nonlinear interaction rate log₁₀(g₀ (Hz))` : $slg """
 
 # ╔═╡ ab51bd5c-a3a4-40ce-a4b1-343d5d938f8c
-md"""` γᵢ/γₑ : `$(slγᵢfγₑ = @bind γᵢfγₑ Slider(0:0.01:1; default=1, show_value=true))"""
+md"""` γᵢ/γₑ : `$(slγᵢfγₑ = @bind γᵢfγₑ Slider(0:0.1:1; default=1, show_value=true))"""
 
 # ╔═╡ 393d4d88-da1a-4aba-bb82-ba1d3e8ec7a3
 md"""`Logarithmic y(entanglement rate) axis logʳᵃᵗᵉ : `$(sllogʳᵃᵗᵉ = @bind logʳᵃᵗᵉ CheckBox(default=true))"""
 
 # ╔═╡ e2d9c02f-d7aa-4d3a-9a1d-2a0ef14d74ad
-md"""`Guide : `$(@bind guide CheckBox(default=false))
+md"""`Guide : `$(@bind guide CheckBox(default=true))
 
 `Center plot : `$(@bind centerplot CheckBox(default=false))"""
 
@@ -548,9 +548,10 @@ begin
 	α² 	= ((γₑ * MHz) / (γₑ * MHz + γᵢ * MHz)^2)^2  # scaling factor α²
 	nₚᵒᵖᵗᶦᵐᵃˡ₁ = 1 / (∆t * sqrt(16 * α²) * (g₀ * kHz)^2) # nₚ for which the maximum rₑ is achieved
 	nₚᵒᵖᵗᶦᵐᵃˡ = (γₑ * MHz) / (∆t * (g₀ * kHz)^2) 		# nₚ for which the maximum rₑ is achieved (also taking γᵢ=γₑ)
+	nₚᵒᵖᵗᶦᵐᵃˡstatic = 1 / (1e-7 * sqrt(16 * α²) * (g₀ * kHz)^2) # nₚ for which the maximum rₑ is achieved, ∆t taken at about 1e-7
 
 	# if centerplot is true, center the plot by updating lognₚspan
-	centerplot && (lognₚspan = (log10(nₚᵒᵖᵗᶦᵐᵃˡ) - 3):0.1:(log10(nₚᵒᵖᵗᶦᵐᵃˡ) + 3))
+	centerplot && (lognₚspan = (log10(nₚᵒᵖᵗᶦᵐᵃˡstatic) - 3):0.1:(log10(nₚᵒᵖᵗᶦᵐᵃˡstatic) + 3))
 	
 	nₚspan = 10 .^ lognₚspan
 	logpspan = logpowerspan(lognₚspan, γₑ, γᵢ)
@@ -575,7 +576,7 @@ begin
 
 	plot!(nₚspan, rₑ, label="\$r_e\$ [1 click event]", c=1)
 	plot!(nₚspan, rₑ²ᶜˡᶦᶜᵏˢ .+ rₑ, xaxis="nb of photons in the pump mode", label="\$r_e\$ [1 or 2 click events]", c=1, ls=:dash)
-	plot!(nₚspan, rₑᵖᵘʳᵉ, label="\$r_e\$ (+ purification)", c=3, ls=:dashdot)
+	plot!(nₚspan, rₑᵖᵘʳᵉ, label="\$r_e\$ (+ purification)", c=3)
 
 	# plot maximum points
 	if guide	
