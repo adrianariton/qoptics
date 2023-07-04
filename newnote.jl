@@ -218,7 +218,7 @@ begin
 		return c0ᵃⁿᵃˡʸᵗᶦᶜ, c1ᵃⁿᵃˡʸᵗᶦᶜ
 	end
 
-	#=  the |00⟩ and |11⟩ population of the state ψ at time dt, calculated for each 		value og g in the g array.
+	#=  the |00⟩ and |11⟩ population of the state ψ at time dt, calculated for each 		value og g in the g array. dt is in units of 1e-6 seconds, g in kiloherz
 		@params:
 			- dt: timestamp to calculate the returned values at
 			- g: array of values of g to calculate the returned values
@@ -226,7 +226,7 @@ begin
 			- c0ᵃⁿᵃˡʸᵗᶦᶜ, c1ᵃⁿᵃˡʸᵗᶦᶜ: arrays containing the |00⟩ and |11⟩ population of the state, calculated at timstamp dt, for each element of array g
 	=#
 	function analytical_components(dt, g) 
-		# dt is in units of 1e-6 seconds, g in kiloherz
+		# gᵖʳᶦᵐᵉv is the gᵖʳᶦᵐᵉ vector (array) obtaineg from g by applying the formulas above
 		gᵖʳᶦᵐᵉv = sqrt.(Complex.((γₑ)^2 / 16 .- (g / 1000).^2.)) # in MHz
 		
 		# c1 analitically vs g, g = g₀*sqrt(nₚ)
@@ -450,7 +450,7 @@ md"""We also plot the entanglement rate after  [purification](#c6d24b06-f1aa-473
 md""""""
 
 # ╔═╡ c5a2437e-c77f-4a04-84ce-cb73a682fac5
-md"""` Pump pulse duration: ∆t (.1µs)  : `$(sldtµs = @bind ∆tµs Slider(1:0.01:10; default=1, show_value=true))"""
+md"""` Pump pulse duration: ∆t (.1µs)  : `$(sldtµs = @bind ∆tµs Slider(1:0.5:10; default=1, show_value=true))"""
 
 # ╔═╡ 7ab52be5-fecd-440d-bd5d-60489ff10f3b
 md"""` Extrinsic loss rate γₑ | log₁₀(γₑ (MHz)) : `$slγₑ"""
@@ -548,7 +548,7 @@ begin
 	α² 	= ((γₑ * MHz) / (γₑ * MHz + γᵢ * MHz)^2)^2  # scaling factor α²
 	nₚᵒᵖᵗᶦᵐᵃˡ₁ = 1 / (∆t * sqrt(16 * α²) * (g₀ * kHz)^2) # nₚ for which the maximum rₑ is achieved
 	nₚᵒᵖᵗᶦᵐᵃˡ = (γₑ * MHz) / (∆t * (g₀ * kHz)^2) 		# nₚ for which the maximum rₑ is achieved (also taking γᵢ=γₑ)
-	nₚᵒᵖᵗᶦᵐᵃˡstatic = 1 / (1e-7 * sqrt(16 * α²) * (g₀ * kHz)^2) # nₚ for which the maximum rₑ is achieved, ∆t taken at about 1e-7
+	nₚᵒᵖᵗᶦᵐᵃˡstatic = 1 / (1e-7 * sqrt(16 * α²) * (g₀ * kHz)^2) # nₚ for which the maximum rₑ is achieved, ∆t taken at about 1e-7seconds, for the graph to be static when centered w.r.t modifications of ∆t
 
 	# if centerplot is true, center the plot by updating lognₚspan
 	centerplot && (lognₚspan = (log10(nₚᵒᵖᵗᶦᵐᵃˡstatic) - 3):0.1:(log10(nₚᵒᵖᵗᶦᵐᵃˡstatic) + 3))
@@ -567,6 +567,12 @@ begin
 
 	
 	plotnp = plot(title="Entanglement Rate (Hz)",legend=:bottomleft)
+
+	if (logʳᵃᵗᵉ == true)
+		plot!(ylabel="\$log_{10}(r_e)\$")
+	else
+		plot!(ylabel="\$r_e\$ ")
+	end
 
 	if guide
 		plot!(nₚspan, rₑmax, label="\$r_e\$ (γₑ = γᵢ)", c=2)
@@ -649,26 +655,26 @@ Markdown.parse("""
 # ╔═╡ 9b170d18-9d9f-4863-b98b-4e8a8c6b836d
 begin
 	# c0 and c1 when reset time is accounted for
-	c0dtr, c1dtr = analytical_components((∆t + tᵣ) * factor, real(g₀ * sqrt.(nₚspan)))
+	c0ᵖᵒʷᵉʳ, c1ᵖᵒʷᵉʳ = analytical_components((∆t + tᵣ) * factor, real(g₀ * sqrt.(nₚspan)))
 	# c0 and c1 when reset time is considered 0
-	c0dt, c1dt = analytical_components((∆t + 0) * factor, real(g₀ * sqrt.(nₚspan)))
+	c0ᵖᵒʷᵉʳₙₒᵣₑₛₑₜ, c1ᵖᵒʷᵉʳₙₒᵣₑₛₑₜ = analytical_components((∆t + 0) * factor, real(g₀ * sqrt.(nₚspan)))
 
 	## Plotting the infidelity vs pump photons
 	# 1. no reset time included
-	infidelity1 = 1 .- 1 * (abs.(c0dt).^ 2 .+ abs.(c1dt).^ 2)  
+	infidelity1ₙₒᵣₑₛₑₜ = 1 .- 1 * (abs.(c0ᵖᵒʷᵉʳₙₒᵣₑₛₑₜ).^ 2 .+ abs.(c1ᵖᵒʷᵉʳₙₒᵣₑₛₑₜ).^ 2)  
 
 	# 2. with reset time included
-	infidelity1r = 1 .- 1 * (abs.(c0dtr).^ 2 .+ abs.(c1dtr).^ 2) 
+	infidelity1 = 1 .- 1 * (abs.(c0ᵖᵒʷᵉʳ).^ 2 .+ abs.(c1ᵖᵒʷᵉʳ).^ 2) 
 
 	plotinfidelities = plot(title="Infidelitiy vs nb of photons in pump mode", xaxis="nb of photons in the pump mode", legend=:bottomright)
-	plot!(nₚspan, infidelity1 , label="Infidelity? (\$t_r = 0\$)")
-	plot!(nₚspan, infidelity1r , label="Infidelity?")
+	plot!(nₚspan, infidelity1ₙₒᵣₑₛₑₜ , label="Infidelity? (\$t_r = 0\$)")
+	plot!(nₚspan, infidelity1 , label="Infidelity?")
 
 	
 	if (logʳᵃᵗᵉ == true)
-		plot(plotinfidelities, xscale=:log10, yscale=:log10, ylimits=(1e-4,1))
+		plot(plotinfidelities, xscale=:log10, yscale=:log10, ylimits=(1e-4,1),  ylabel="Entanglement infidelity")
 	else
-		plot(plotinfidelities, xscale=:log10)
+		plot(plotinfidelities, xscale=:log10, ylabel="Entanglement infidelity")
 	end
 end
 
