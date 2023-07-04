@@ -467,7 +467,7 @@ md"""`Logarithmic y(entanglement rate) axis logʳᵃᵗᵉ : `$(sllogʳᵃᵗᵉ
 # ╔═╡ e2d9c02f-d7aa-4d3a-9a1d-2a0ef14d74ad
 md"""`Guide : `$(@bind guide CheckBox(default=true))
 
-`Center plot : `$(@bind centerplot CheckBox(default=false))"""
+`Center plot : `$(slcenter = @bind centerplot CheckBox(default=false))"""
 
 
 # ╔═╡ 8dfaa441-de2e-47f4-869d-bf4471541b22
@@ -547,9 +547,11 @@ begin
 
 	α² 	= ((γₑ * MHz) / (γₑ * MHz + γᵢ * MHz)^2)^2  # scaling factor α²
 	nₚᵒᵖᵗᶦᵐᵃˡ₁ = 1 / (∆t * sqrt(16 * α²) * (g₀ * kHz)^2) # nₚ for which the maximum rₑ is achieved
-	nₚᵒᵖᵗᶦᵐᵃˡ = (γₑ * MHz) / (∆t * (g₀ * kHz)^2) 		# nₚ for which the maximum rₑ is achieved (also taking γᵢ=γₑ)
-	nₚᵒᵖᵗᶦᵐᵃˡstatic = 1 / (1e-7 * sqrt(16 * α²) * (g₀ * kHz)^2) # nₚ for which the maximum rₑ is achieved, ∆t taken at about 1e-7seconds, for the graph to be static when centered w.r.t modifications of ∆t
 
+	nₚᵒᵖᵗᶦᵐᵃˡ = (γₑ * MHz) / (∆t * (g₀ * kHz)^2) 	# nₚ for which the maximum rₑ is achieved (also taking γᵢ=γₑ)
+
+	nₚᵒᵖᵗᶦᵐᵃˡstatic = (γₑ * MHz) / (1e-7 * (g₀ * kHz)^2)	# nₚ for which the maximum rₑ is achieved, ∆t taken at about 1e-7seconds, for the graph to be static when centered w.r.t modifications of ∆t	
+	
 	# if centerplot is true, center the plot by updating lognₚspan
 	centerplot && (lognₚspan = (log10(nₚᵒᵖᵗᶦᵐᵃˡstatic) - 3):0.1:(log10(nₚᵒᵖᵗᶦᵐᵃˡstatic) + 3))
 	
@@ -645,6 +647,10 @@ md"""` γᵢ/γₑ : `$slγᵢfγₑ"""
 # ╔═╡ b20c1921-9935-4013-b74e-830db0f82023
 md"""`Logarithmic y(entanglement rate) axis logʳᵃᵗᵉ : `$sllogʳᵃᵗᵉ"""
 
+# ╔═╡ f169c528-d8da-41d3-910a-322cccb317dd
+md"""`Center plot : `$slcenter"""
+
+
 # ╔═╡ fedf62db-d9f0-4edf-904e-bb14885ac80b
 Markdown.parse("""
 	|g / γₑ            | Comments 				   |
@@ -667,8 +673,10 @@ begin
 	infidelity1 = 1 .- 1 * (abs.(c0ᵖᵒʷᵉʳ).^ 2 .+ abs.(c1ᵖᵒʷᵉʳ).^ 2) 
 
 	plotinfidelities = plot(title="Infidelitiy vs nb of photons in pump mode", xaxis="nb of photons in the pump mode", legend=:bottomright)
-	plot!(nₚspan, infidelity1ₙₒᵣₑₛₑₜ , label="Infidelity? (\$t_r = 0\$)")
-	plot!(nₚspan, infidelity1 , label="Infidelity?")
+	plot!(nₚspan, infidelity1ₙₒᵣₑₛₑₜ , label="Infidelity? (\$t_r = 0\$)", ylimits=(1e-4,1))
+	plot!(nₚspan, infidelity1 , label="Infidelity?", ylimits=(1e-4,1))
+
+	
 
 	
 	if (logʳᵃᵗᵉ == true)
@@ -2560,6 +2568,7 @@ version = "1.4.1+0"
 # ╟─9795091c-77b8-416d-8b58-adc0686dd4e6
 # ╟─b5747e4f-a300-4705-80f7-2e5ec1184041
 # ╟─b20c1921-9935-4013-b74e-830db0f82023
+# ╟─f169c528-d8da-41d3-910a-322cccb317dd
 # ╟─fedf62db-d9f0-4edf-904e-bb14885ac80b
 # ╟─9b170d18-9d9f-4863-b98b-4e8a8c6b836d
 # ╟─8d76397d-7d0b-4fc3-9990-da676c5ae22b
